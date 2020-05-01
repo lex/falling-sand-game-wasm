@@ -1,3 +1,13 @@
-import * as wasm from "sand-game-wasm";
+import { SandGame } from "sand-game-wasm";
 
-wasm.greet();
+const pre = document.getElementById("canvas");
+const sandGame = SandGame.new();
+
+const renderLoop = () => {
+    pre.textContent = sandGame.render();
+    sandGame.step();
+
+    requestAnimationFrame(renderLoop);
+};
+
+requestAnimationFrame(renderLoop);
