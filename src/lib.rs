@@ -9,6 +9,7 @@ macro_rules! log {
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
+use std::mem;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -186,9 +187,7 @@ impl SandGame {
 
     fn swap_buffers(&mut self) {
         // how do references work?????
-        let temp = self.input_buffer.clone();
-        self.input_buffer = self.output_buffer.clone();
-        self.output_buffer = temp;
+        mem::swap(&mut self.input_buffer, &mut self.output_buffer);
     }
 
     fn get_index(&self, x: u32, y: u32) -> usize {
