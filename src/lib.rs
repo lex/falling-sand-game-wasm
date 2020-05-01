@@ -107,7 +107,7 @@ impl SandGame {
                     x % (width - 1),
                     y % (height - 1),
                 ) {
-                    (1, 3, _, _) => ParticleType::Sand,
+                    (16, 1, _, _) => ParticleType::Sand,
                     (0, _, _, _) => ParticleType::Wall,
                     (_, 0, _, _) => ParticleType::Wall,
                     (_, _, 0, _) => ParticleType::Wall,
@@ -134,6 +134,11 @@ impl SandGame {
 
     pub fn render(&self) -> String {
         self.to_string()
+    }
+
+    pub fn spawn(&mut self) {
+        let index = self.get_index(16, 1);
+        self.input_buffer[index].p_type = ParticleType::Sand;
     }
 
     pub fn step(&mut self) {
