@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/rustwasm/create-wasm-app#readme",
   "dependencies": {
+    "pixi.js": "^5.2.3",
     "sand-game-wasm": "file:../pkg"
   },
   "devDependencies": {

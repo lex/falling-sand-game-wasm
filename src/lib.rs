@@ -27,16 +27,15 @@ pub struct SandGame {
     height: u32,
     input_buffer: Vec<particle::Particle>,
     output_buffer: Vec<particle::Particle>,
+    framebuffer: Vec<u8>,
 }
 
 #[wasm_bindgen]
 impl SandGame {
-    pub fn new() -> SandGame {
-        let width = 32;
-        let height = 32;
-
+    pub fn new(width: u32, height: u32) -> SandGame {
         let mut input_buffer = Vec::new();
         let mut output_buffer = Vec::new();
+        let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| {0}).collect();
 
         for y in 0..height {
             for x in 0..width {
@@ -61,7 +60,20 @@ impl SandGame {
             height,
             input_buffer,
             output_buffer,
+            framebuffer
         }
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn framebuffer(&self) -> *const u8{
+        self.framebuffer.as_ptr()
     }
 
     pub fn render(&self) -> String {
@@ -90,7 +102,25 @@ impl SandGame {
             }
         }
 
+        self.update_framebuffer();
         self.swap_buffers();
+    }
+
+    fn update_framebuffer(&mut self) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let index = self.get_index(x, y);
+                let p_type = self.output_buffer[index].p_type;
+
+                let position = (y * (self.width * 3) + x * 3) as usize;
+
+                let v: u8 = if p_type == ParticleType::Empty {0} else {255};
+
+                self.framebuffer[position] = v;
+                self.framebuffer[position + 1] = v;
+                self.framebuffer[position + 2] = v;
+            }
+        }
     }
 
     fn clear_output_buffer(&mut self) {
