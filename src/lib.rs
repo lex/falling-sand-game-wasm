@@ -76,12 +76,8 @@ impl SandGame {
         self.framebuffer.as_ptr()
     }
 
-    pub fn render(&self) -> String {
-        self.to_string()
-    }
-
-    pub fn spawn(&mut self) {
-        let index = self.get_index(16, 1);
+    pub fn spawn(&mut self, x: u32, y: u32) {
+        let index = self.get_index(x, y);
         self.input_buffer[index].p_type = ParticleType::Sand;
     }
 
@@ -147,7 +143,6 @@ impl SandGame {
     }
 
     fn swap_buffers(&mut self) {
-        // how do references work?????
         mem::swap(&mut self.input_buffer, &mut self.output_buffer);
     }
 
@@ -190,23 +185,5 @@ impl SandGame {
         };
 
         self.output_buffer[new_index].p_type = ParticleType::Sand;
-    }
-}
-
-impl fmt::Display for SandGame {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.output_buffer.as_slice().chunks(self.width as usize) {
-            for &particle in line {
-                let symbol = if particle.p_type == ParticleType::Empty {
-                    '◻'
-                } else {
-                    '◼'
-                };
-                write!(f, "{}", symbol)?;
-            }
-            write!(f, "\n")?;
-        }
-
-        Ok(())
     }
 }
