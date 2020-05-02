@@ -1,5 +1,15 @@
-mod utils;
 extern crate web_sys;
+
+mod particle;
+mod utils;
+
+use std::fmt;
+use std::mem;
+use wasm_bindgen::prelude::*;
+
+use particle::Direction;
+use particle::Particle;
+use particle::ParticleType;
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -7,87 +17,16 @@ macro_rules! log {
     }
 }
 
-use std::fmt;
-use wasm_bindgen::prelude::*;
-use std::mem;
-
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParticleType {
-    Empty = 0,
-    Wall = 1,
-    Sand = 2,
-}
-
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Direction {
-    Left = 0,
-    Down = 1,
-    Right = 2,
-    Up = 3,
-    DownLeft = 4,
-    DownRight = 5,
-    UpRight = 6,
-    UpLeft = 7,
-    None = 8,
-}
-
-impl fmt::Display for Direction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let printable = match *self {
-            Direction::Left => "Direction::Left",
-            Direction::Down => "Direction::Down",
-            Direction::Right => "Direction::Right",
-            Direction::Up => "Direction::Up",
-            Direction::DownLeft => "Direction::DownLeft",
-            Direction::DownRight => "Direction::DownRight",
-            Direction::UpRight => "Direction::UpRight",
-            Direction::UpLeft => "Direction::UpLeft",
-            Direction::None => "Direction::None",
-        };
-        write!(f, "{}", printable)
-    }
-}
-
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Particle {
-    p_type: ParticleType,
-}
-
-#[wasm_bindgen]
 pub struct SandGame {
     width: u32,
     height: u32,
-    input_buffer: Vec<Particle>,
-    output_buffer: Vec<Particle>,
-}
-
-impl fmt::Display for SandGame {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.output_buffer.as_slice().chunks(self.width as usize) {
-            for &particle in line {
-                let symbol = if particle.p_type == ParticleType::Empty {
-                    '◻'
-                } else {
-                    '◼'
-                };
-                write!(f, "{}", symbol)?;
-            }
-            write!(f, "\n")?;
-        }
-
-        Ok(())
-    }
+    input_buffer: Vec<particle::Particle>,
+    output_buffer: Vec<particle::Particle>,
 }
 
 #[wasm_bindgen]
@@ -101,13 +40,7 @@ impl SandGame {
 
         for y in 0..height {
             for x in 0..width {
-
-                let p_type = match (
-                    x % width,
-                    y % height,
-                    x % (width - 1),
-                    y % (height - 1),
-                ) {
+                let p_type = match (x % width, y % height, x % (width - 1), y % (height - 1)) {
                     (16, 1, _, _) => ParticleType::Sand,
                     (0, _, _, _) => ParticleType::Wall,
                     (_, 0, _, _) => ParticleType::Wall,
@@ -116,9 +49,7 @@ impl SandGame {
                     _ => ParticleType::Empty,
                 };
 
-                let particle = Particle { p_type };
-
-                input_buffer.push(particle);
+                input_buffer.push(Particle { p_type });
                 output_buffer.push(Particle {
                     p_type: ParticleType::Empty,
                 });
@@ -229,5 +160,23 @@ impl SandGame {
         };
 
         self.output_buffer[new_index].p_type = ParticleType::Sand;
+    }
+}
+
+impl fmt::Display for SandGame {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for line in self.output_buffer.as_slice().chunks(self.width as usize) {
+            for &particle in line {
+                let symbol = if particle.p_type == ParticleType::Empty {
+                    '◻'
+                } else {
+                    '◼'
+                };
+                write!(f, "{}", symbol)?;
+            }
+            write!(f, "\n")?;
+        }
+
+        Ok(())
     }
 }
