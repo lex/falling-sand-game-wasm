@@ -1,10 +1,18 @@
 <template>
   <div class="hello">
     <div>
-      <canvas id="canvas" :width="canvasWidth" :height="canvasHeight">rip</canvas>
+      <canvas
+        id="canvas"
+        :width="canvasWidth"
+        :height="canvasHeight"
+        v-on:mousemove="onMouseMove"
+        v-on:mousedown="onMouseDown"
+        v-on:mouseup="onMouseUp"
+        >rip</canvas
+      >
     </div>
     <div>
-      <button v-on:click="spawn">spawn</button>
+      <p>{{ mouseX }},{{ mouseY }}</p>
     </div>
   </div>
 </template>
@@ -28,29 +36,67 @@ export default class HelloWorld extends Vue {
   private canvasWidth = this.gameWidth * this.canvasScale;
   private canvasHeight = this.gameHeight * this.canvasScale;
 
+  private mouseX = 0;
+  private mouseY = 0;
+  private drawing = false;
+
   async mounted() {
     await this.loadWasm();
     this.setupGame();
     requestAnimationFrame(this.renderLoop);
   }
 
-  async loadWasm() {
+  private async loadWasm() {
     const wasm = await import("../../pkg/index");
     this.wasm = wasm;
   }
 
-  setupGame() {
+  private onMouseMove(event: MouseEvent) {
+    this.mouseX = Math.floor(event.offsetX / this.canvasScale);
+    this.mouseY = Math.floor(event.offsetY / this.canvasScale);
+  }
+
+  private onMouseDown() {
+    this.drawing = true;
+  }
+
+  private onMouseUp() {
+    this.drawing = false;
+  }
+
+  private setupGame() {
     this.sandGame = this.wasm.SandGame.new(this.gameWidth, this.gameHeight);
     this.sandGame.initialize_webgl();
   }
 
-  renderLoop() {
-    this.sandGame.step();
-    requestAnimationFrame(this.renderLoop);
+  private draw() {
+    const r = 10;
+    const x = this.mouseX;
+    const y = this.mouseY;
+
+      for (let i = 0; i < 360; i += 10)
+      {
+            const angle = i;
+            const x1 = Math.floor(r * Math.cos(angle * Math.PI / 180));
+            const y1 = Math.floor(r * Math.sin(angle * Math.PI / 180));
+            const spawnX = x + x1;
+            const spawnY = y + y1;
+
+            if (spawnX < 0 || spawnX > this.gameWidth - 1 || spawnY < 0 || spawnY > this.gameHeight - 1) {
+              continue;
+            }
+
+            this.sandGame.spawn(x+x1, y+y1);
+      }
   }
 
-  spawn() {
-    this.sandGame.spawn(5, 5);
+  private renderLoop() {
+    if (this.drawing) {
+      this.draw();
+    }
+
+    this.sandGame.step();
+    requestAnimationFrame(this.renderLoop);
   }
 }
 </script>
