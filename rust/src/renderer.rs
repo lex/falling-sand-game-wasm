@@ -116,7 +116,7 @@ impl Renderer {
 
         // uniforms
         if let Some(u) = &u_sampler {
-            context.uniform1i(Some(u), 0);
+            context.uniform1i(Some(u), WebGlRenderingContext::TEXTURE0 as i32);
         }
 
         // clear
