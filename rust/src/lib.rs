@@ -6,6 +6,9 @@ mod utils;
 
 use wasm_bindgen::prelude::*;
 
+use rand::{Rng, SeedableRng};
+
+
 use particle::Direction;
 use particle::Particle;
 use particle::ParticleType;
@@ -29,6 +32,7 @@ pub struct SandGame {
     framebuffer: Vec<u8>,
     renderer: Renderer,
     clock: u8,
+    rng: rand_pcg::Lcg64Xsh32,
 }
 
 #[wasm_bindgen]
@@ -37,6 +41,7 @@ impl SandGame {
         utils::set_panic_hook();
         let mut particles: Vec<Particle> = Vec::new();
 
+        let mut rng = rand_pcg::Pcg32::seed_from_u64(123);
         let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| 0).collect();
 
         for y in 0..height {
@@ -66,6 +71,7 @@ impl SandGame {
             framebuffer,
             renderer,
             clock: 0,
+            rng: rng,
         }
     }
 
@@ -161,6 +167,8 @@ impl SandGame {
         let particle_left = &self.particles[index_left];
         let particle_right = &self.particles[index_right];
 
+        let r = self.rng.gen_range(0, 2);
+
         let direction = match (
             particle_down_left.p_type,
             particle_down.p_type,
@@ -170,7 +178,7 @@ impl SandGame {
         ) {
             (_, ParticleType::Empty, _, _, _) => Direction::Down,
             (ParticleType::Empty, _, ParticleType::Empty, _, _) => {
-                if self.clock % 2 == 0 {
+                if r == 0 {
                     Direction::DownLeft
                 } else {
                     Direction::DownRight
@@ -179,14 +187,14 @@ impl SandGame {
             (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
             (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
-                if self.clock % 2 == 0 {
+                if r == 0 {
                     Direction::Left
                 } else {
                     Direction::Right
                 }
             }
-            (_, _, _, ParticleType::Empty, _) => Direction::Left,
             (_, _, _, _, ParticleType::Empty) => Direction::Right,
+            (_, _, _, ParticleType::Empty, _) => Direction::Left,
             _ => Direction::None,
         };
 
@@ -216,6 +224,8 @@ impl SandGame {
         let particle_down_left = &self.particles[index_down_left];
         let particle_down_right = &self.particles[index_down_right];
 
+        let r = self.rng.gen_range(0, 2);
+
         let direction = match (
             particle_down_left.p_type,
             particle_down.p_type,
@@ -224,14 +234,14 @@ impl SandGame {
             (_, ParticleType::Empty, _) => Direction::Down,
             (_, ParticleType::Water, _) => Direction::Down,
             (ParticleType::Empty, _, ParticleType::Empty) => {
-                if self.clock % 2 == 0 {
+                if r == 0 {
                     Direction::DownLeft
                 } else {
                     Direction::DownRight
                 }
             }
             (ParticleType::Water, _, ParticleType::Water) => {
-                if self.clock % 2 == 0 {
+                if r == 0 {
                     Direction::DownLeft
                 } else {
                     Direction::DownRight
