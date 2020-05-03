@@ -4,7 +4,6 @@ mod particle;
 mod renderer;
 mod utils;
 
-use std::mem;
 use wasm_bindgen::prelude::*;
 
 use particle::Direction;
@@ -71,9 +70,18 @@ impl SandGame {
         }
     }
 
-    pub fn spawn(&mut self, x: u32, y: u32) {
+    pub fn spawn(&mut self, x: u32, y: u32, p_type: u8) {
+        // how????
+        let p_type = match p_type {
+            0 => ParticleType::Empty,
+            1 => ParticleType::Wall,
+            2 => ParticleType::Sand,
+            3 => ParticleType::Water,
+            _ => ParticleType::Empty
+        };
+
         let index = self.get_index(x, y);
-        self.particles[index].p_type = ParticleType::Sand;
+        self.particles[index].p_type = p_type;
     }
 
     pub fn step(&mut self) {
@@ -90,6 +98,7 @@ impl SandGame {
                 match particle.p_type {
                     ParticleType::Wall => self.update_wall(x, y),
                     ParticleType::Sand => self.update_sand(x, y),
+                    ParticleType::Water => self.update_water(x, y),
                     _ => (),
                 };
             }
@@ -116,8 +125,10 @@ impl SandGame {
 
                 let (r, g, b) = match particle.p_type {
                     ParticleType::Empty => (0, 0, 0),
-                    ParticleType::Wall => (0, 255, 0),
+                    ParticleType::Wall => (220, 220, 220),
                     ParticleType::Sand => (194, 178, 128),
+                    ParticleType::Water => (128, 197, 222),
+                    _ => (255, 128, 128),
                 };
 
                 self.framebuffer[position + 0] = r;
@@ -135,6 +146,51 @@ impl SandGame {
         let index_current = self.get_index(x, y);
         self.particles[index_current].p_type = ParticleType::Wall;
         self.particles[index_current].clock = self.clock.wrapping_add(1);
+    }
+
+    fn update_water(&mut self, x: u32, y: u32) {
+        let index_current = self.get_index(x, y);
+        let index_down = self.get_index(x, y + 1);
+        let index_down_left = self.get_index(x - 1, y + 1);
+        let index_down_right = self.get_index(x + 1, y + 1);
+        let index_left = self.get_index(x - 1, y);
+        let index_right = self.get_index(x + 1, y);
+
+        let particle_down = &self.particles[index_down];
+        let particle_down_left = &self.particles[index_down_left];
+        let particle_down_right = &self.particles[index_down_right];
+        let particle_left = &self.particles[index_left];
+        let particle_right = &self.particles[index_right];
+
+        let direction = match (
+            particle_down_left.p_type,
+            particle_down.p_type,
+            particle_down_right.p_type,
+            particle_left.p_type,
+            particle_right.p_type,
+        ) {
+            (_, ParticleType::Empty, _, _, _) => Direction::Down,
+            (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
+            (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
+            (_, _, _, ParticleType::Empty, _) => Direction::Left,
+            (_, _, _, _, ParticleType::Empty) => Direction::Right,
+            _ => Direction::None,
+        };
+
+        let index_new = match direction {
+            Direction::Down => index_down,
+            Direction::DownLeft => index_down_left,
+            Direction::DownRight => index_down_right,
+            Direction::Left => index_left,
+            Direction::Right => index_right,
+            Direction::None => index_current,
+            _ => index_current,
+        };
+
+        self.particles[index_current].p_type = ParticleType::Empty;
+        self.particles[index_new].p_type = ParticleType::Water;
+        self.particles[index_current].clock = self.clock.wrapping_add(1);
+        self.particles[index_new].clock = self.clock.wrapping_add(1);
     }
 
     fn update_sand(&mut self, x: u32, y: u32) {

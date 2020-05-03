@@ -12,7 +12,16 @@
       >
     </div>
     <div>
-      <p>{{ mouseX }},{{ mouseY }}</p>
+      <p>{{ particleTypeAsString(particleType) }}</p>
+    </div>
+    <div>
+      <button
+        v-for="particleType in particleTypes"
+        :key="particleType"
+        v-on:click="selectType(particleType)"
+      >
+        {{ particleTypeAsString(particleType) }}
+      </button>
     </div>
   </div>
 </template>
@@ -20,6 +29,13 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import type { SandGame } from "../../pkg/index";
+
+enum ParticleType {
+    Empty = 0,
+    Wall = 1,
+    Sand = 2,
+    Water = 3,
+}
 
 @Component
 export default class Game extends Vue {
@@ -37,6 +53,7 @@ export default class Game extends Vue {
   private mouseX = 0;
   private mouseY = 0;
   private drawing = false;
+  private particleType = ParticleType.Sand;
 
   async mounted() {
     await this.loadWasm();
@@ -84,7 +101,7 @@ export default class Game extends Vue {
               continue;
             }
 
-            this.sandGame.spawn(x+x1, y+y1);
+            this.sandGame.spawn(x+x1, y+y1, this.particleType);
       }
   }
 
@@ -96,9 +113,20 @@ export default class Game extends Vue {
     this.sandGame.step();
     requestAnimationFrame(this.renderLoop);
   }
+
+  selectType(type: number) {
+    this.particleType = type as ParticleType;
+  }
+
+  particleTypeAsString(type: number): string {
+    return ParticleType[type];
+  }
+
+  get particleTypes(): Array<number> {
+    return Object.keys(ParticleType).filter(key => !isNaN(Number(key))).map(k => Number(k));
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

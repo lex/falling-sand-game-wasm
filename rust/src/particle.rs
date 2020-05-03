@@ -1,16 +1,15 @@
-use std::fmt;
-
 pub struct Particle {
     pub p_type: ParticleType,
     pub clock: u8,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq)]
 pub enum ParticleType {
     Empty = 0,
     Wall = 1,
     Sand = 2,
+    Water = 3,
 }
 
 #[repr(u8)]
