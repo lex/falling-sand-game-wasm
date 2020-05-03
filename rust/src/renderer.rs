@@ -5,12 +5,6 @@ use web_sys::{
     WebGlUniformLocation,
 };
 
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
-}
-
 pub struct ProgramInfo {
     pub a_vertex_position: i32,
     pub a_texture_coordinate: i32,
@@ -51,10 +45,6 @@ impl Renderer {
         let buffers = self.create_buffers().unwrap();
         self.buffers = Some(buffers);
 
-        // bind and shit
-
-        // vertices
-        log!("webgl initialized");
         Ok(())
     }
 
@@ -109,7 +99,7 @@ impl Renderer {
             );
         }
 
-        // texture
+        // texture coordinates
         let texture_coordinate_buffer = context.create_buffer().ok_or("failed to create buffer")?;
 
         context.bind_buffer(
@@ -127,7 +117,29 @@ impl Renderer {
             );
         }
 
+        // texture
         let texture = context.create_texture().ok_or("failed to create texture")?;
+
+        context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&texture));
+
+        let default_texture: [u8; 3] = [0, 0, 0];
+
+        let _result = context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+            WebGlRenderingContext::TEXTURE_2D,
+            0,
+            WebGlRenderingContext::RGB as i32,
+            1,
+            1,
+            0,
+            WebGlRenderingContext::RGB,
+            WebGlRenderingContext::UNSIGNED_BYTE,
+            Some(&default_texture)
+        );
+
+        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MIN_FILTER, WebGlRenderingContext::NEAREST as i32);
+        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MAG_FILTER, WebGlRenderingContext::NEAREST as i32);
+        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_WRAP_S, WebGlRenderingContext::CLAMP_TO_EDGE as i32);
+        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_WRAP_T, WebGlRenderingContext::CLAMP_TO_EDGE as i32);
 
         let buffers = Buffers {
             vertex_buffer: Some(vertex_buffer),
@@ -135,11 +147,10 @@ impl Renderer {
             texture_coordinate_buffer: Some(texture_coordinate_buffer),
             texture: Some(texture),
         };
-        log!("created buffers");
+
         return Ok(buffers);
     }
 
-    // pub fn render(&self, framebuffer: &[u8]) {
     pub fn render(&self, framebuffer: &[u8], width: u32, height: u32) {
         let context = self.context.as_ref().unwrap();
         let buffers = self.buffers.as_ref().unwrap();
@@ -185,7 +196,7 @@ impl Renderer {
 
         context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&texture));
 
-        let result = context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+        let _result = context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
             WebGlRenderingContext::TEXTURE_2D,
             0,
             WebGlRenderingContext::RGB as i32,
@@ -196,11 +207,6 @@ impl Renderer {
             WebGlRenderingContext::UNSIGNED_BYTE,
             Some(framebuffer),
         );
-
-        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MIN_FILTER, WebGlRenderingContext::NEAREST as i32);
-        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MAG_FILTER, WebGlRenderingContext::NEAREST as i32);
-        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_WRAP_S, WebGlRenderingContext::CLAMP_TO_EDGE as i32);
-        context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_WRAP_T, WebGlRenderingContext::CLAMP_TO_EDGE as i32);
 
         context.clear_color(0.0, 0.0, 0.0, 1.0);
         context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
@@ -226,14 +232,12 @@ impl Renderer {
             attribute vec2 aVertexPosition;
             attribute vec2 aTextureCoord;
 
-            varying lowp vec4 vColor;
             varying highp vec2 vTextureCoord;
             varying highp vec2 vVertexPosition;
 
             void main() {
                 gl_Position = vec4(aVertexPosition, 1.0, 1.0);
                 vTextureCoord = aTextureCoord;
-                vVertexPosition = aVertexPosition;
             }
         "#,
         )?;
@@ -243,14 +247,9 @@ impl Renderer {
             WebGlRenderingContext::FRAGMENT_SHADER,
             r#"
             varying highp vec2 vTextureCoord;
-            varying highp vec2 vVertexPosition;
             uniform sampler2D uSampler;
 
             void main() {
-                // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-                // gl_FragColor = vec4(vTextureCoord, 0.0, 1.0);
-                // gl_FragColor = vec4(vVertexPosition, 0.0, 1.0);
-                // gl_FragColor = vec4(vTextureCoord.x, vTextureCoord.y, 0.0, 0.0);
                 gl_FragColor = texture2D(uSampler, vTextureCoord);
             }
         "#,

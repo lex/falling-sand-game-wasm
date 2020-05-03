@@ -40,7 +40,7 @@ impl SandGame {
         utils::set_panic_hook();
         let mut particles: Vec<Particle> = Vec::new();
 
-        let mut rng = rand_pcg::Pcg32::seed_from_u64(123);
+        let rng = rand_pcg::Pcg32::seed_from_u64(419);
         let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| 0).collect();
 
         for y in 0..height {
