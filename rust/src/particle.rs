@@ -10,6 +10,7 @@ pub enum ParticleType {
     Wall = 1,
     Sand = 2,
     Water = 3,
+    Plant = 4,
 }
 
 #[repr(u8)]
