@@ -1,8 +1,8 @@
 use std::fmt;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Particle {
     pub p_type: ParticleType,
+    pub clock: u8,
 }
 
 #[repr(u8)]
@@ -25,21 +25,4 @@ pub enum Direction {
     UpRight = 6,
     UpLeft = 7,
     None = 8,
-}
-
-impl fmt::Display for Direction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let printable = match *self {
-            Direction::Left => "Direction::Left",
-            Direction::Down => "Direction::Down",
-            Direction::Right => "Direction::Right",
-            Direction::Up => "Direction::Up",
-            Direction::DownLeft => "Direction::DownLeft",
-            Direction::DownRight => "Direction::DownRight",
-            Direction::UpRight => "Direction::UpRight",
-            Direction::UpLeft => "Direction::UpLeft",
-            Direction::None => "Direction::None",
-        };
-        write!(f, "{}", printable)
-    }
 }

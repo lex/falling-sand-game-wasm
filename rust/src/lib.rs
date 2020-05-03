@@ -26,17 +26,18 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 pub struct SandGame {
     width: u32,
     height: u32,
-    input_buffer: Vec<particle::Particle>,
-    output_buffer: Vec<particle::Particle>,
+    particles: Vec<Particle>,
     framebuffer: Vec<u8>,
     renderer: Renderer,
+    clock: u8,
 }
 
 #[wasm_bindgen]
 impl SandGame {
     pub fn new(width: u32, height: u32) -> SandGame {
-        let mut input_buffer = Vec::new();
-        let mut output_buffer = Vec::new();
+        utils::set_panic_hook();
+        let mut particles: Vec<Particle> = Vec::new();
+
         let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| 0).collect();
 
         for y in 0..height {
@@ -49,10 +50,8 @@ impl SandGame {
                     _ => ParticleType::Empty,
                 };
 
-                input_buffer.push(Particle { p_type });
-                output_buffer.push(Particle {
-                    p_type: ParticleType::Empty,
-                });
+
+                particles.push(Particle {p_type, clock: 0});
             }
         }
 
@@ -65,26 +64,28 @@ impl SandGame {
         SandGame {
             width,
             height,
-            input_buffer,
-            output_buffer,
+            particles,
             framebuffer,
             renderer,
+            clock: 0,
         }
     }
 
     pub fn spawn(&mut self, x: u32, y: u32) {
         let index = self.get_index(x, y);
-        self.input_buffer[index].p_type = ParticleType::Sand;
+        self.particles[index].p_type = ParticleType::Sand;
     }
 
     pub fn step(&mut self) {
-        self.clear_output_buffer();
-
         for y in 0..self.height {
             for x in 0..self.width {
                 let index = self.get_index(x, y);
 
-                let particle = self.input_buffer[index];
+                let particle = &self.particles[index];
+
+                if particle.clock.wrapping_sub(self.clock) == 1 {
+                    continue;
+                }
 
                 match particle.p_type {
                     ParticleType::Wall => self.update_wall(x, y),
@@ -94,10 +95,11 @@ impl SandGame {
             }
         }
 
+        self.clock = self.clock.wrapping_add(1);
+
         self.update_framebuffer();
         let f: &[u8] = &self.framebuffer;
         self.renderer.render(f, self.width, self.height);
-        self.swap_buffers();
     }
 
     pub fn initialize_webgl(&mut self) {
@@ -108,11 +110,11 @@ impl SandGame {
         for y in 0..self.height {
             for x in 0..self.width {
                 let index = self.get_index(x, y);
-                let p_type = self.output_buffer[index].p_type;
+                let particle = &self.particles[index];
 
                 let position = (y * (self.width * 3) + x * 3) as usize;
 
-                let (r, g, b) = match p_type {
+                let (r, g, b) = match particle.p_type {
                     ParticleType::Empty => (0, 0, 0),
                     ParticleType::Wall => (0, 255, 0),
                     ParticleType::Sand => (194, 178, 128),
@@ -125,40 +127,14 @@ impl SandGame {
         }
     }
 
-    fn clear_output_buffer(&mut self) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let index = self.get_index(x, y);
-
-                let p_type = match (
-                    x % self.width,
-                    y % self.height,
-                    x % (self.width - 1),
-                    y % (self.height - 1),
-                ) {
-                    (0, _, _, _) => ParticleType::Wall,
-                    (_, 0, _, _) => ParticleType::Wall,
-                    (_, _, 0, _) => ParticleType::Wall,
-                    (_, _, _, 0) => ParticleType::Wall,
-                    _ => ParticleType::Empty,
-                };
-
-                self.output_buffer[index].p_type = p_type;
-            }
-        }
-    }
-
-    fn swap_buffers(&mut self) {
-        mem::swap(&mut self.input_buffer, &mut self.output_buffer);
-    }
-
     fn get_index(&self, x: u32, y: u32) -> usize {
         (y * self.width + x) as usize
     }
 
     fn update_wall(&mut self, x: u32, y: u32) {
         let index_current = self.get_index(x, y);
-        self.output_buffer[index_current].p_type = ParticleType::Wall;
+        self.particles[index_current].p_type = ParticleType::Wall;
+        self.particles[index_current].clock = self.clock.wrapping_add(1);
     }
 
     fn update_sand(&mut self, x: u32, y: u32) {
@@ -167,9 +143,9 @@ impl SandGame {
         let index_down_left = self.get_index(x - 1, y + 1);
         let index_down_right = self.get_index(x + 1, y + 1);
 
-        let particle_down = self.input_buffer[index_down];
-        let particle_down_left = self.input_buffer[index_down_left];
-        let particle_down_right = self.input_buffer[index_down_right];
+        let particle_down = &self.particles[index_down];
+        let particle_down_left = &self.particles[index_down_left];
+        let particle_down_right = &self.particles[index_down_right];
 
         let direction = match (
             particle_down_left.p_type,
@@ -182,7 +158,7 @@ impl SandGame {
             _ => Direction::None,
         };
 
-        let new_index = match direction {
+        let index_new = match direction {
             Direction::Down => index_down,
             Direction::DownLeft => index_down_left,
             Direction::DownRight => index_down_right,
@@ -190,6 +166,9 @@ impl SandGame {
             _ => index_current,
         };
 
-        self.output_buffer[new_index].p_type = ParticleType::Sand;
+        self.particles[index_current].p_type = ParticleType::Empty;
+        self.particles[index_new].p_type = ParticleType::Sand;
+        self.particles[index_current].clock = self.clock.wrapping_add(1);
+        self.particles[index_new].clock = self.clock.wrapping_add(1);
     }
 }

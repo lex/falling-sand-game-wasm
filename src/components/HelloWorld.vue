@@ -82,7 +82,7 @@ export default class HelloWorld extends Vue {
             const spawnX = x + x1;
             const spawnY = y + y1;
 
-            if (spawnX < 0 || spawnX > this.gameWidth - 1 || spawnY < 0 || spawnY > this.gameHeight - 1) {
+            if (spawnX < 2 || spawnX > this.gameWidth - 2 || spawnY < 2 || spawnY > this.gameHeight - 2) {
               continue;
             }
 
