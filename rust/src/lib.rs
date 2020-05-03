@@ -49,8 +49,7 @@ impl SandGame {
                     _ => ParticleType::Empty,
                 };
 
-
-                particles.push(Particle {p_type, clock: 0});
+                particles.push(Particle { p_type, clock: 0 });
             }
         }
 
@@ -77,7 +76,7 @@ impl SandGame {
             1 => ParticleType::Wall,
             2 => ParticleType::Sand,
             3 => ParticleType::Water,
-            _ => ParticleType::Empty
+            _ => ParticleType::Empty,
         };
 
         let index = self.get_index(x, y);
@@ -170,8 +169,22 @@ impl SandGame {
             particle_right.p_type,
         ) {
             (_, ParticleType::Empty, _, _, _) => Direction::Down,
+            (ParticleType::Empty, _, ParticleType::Empty, _, _) => {
+                if self.clock % 2 == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
             (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
+            (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
+                if self.clock % 2 == 0 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                }
+            }
             (_, _, _, ParticleType::Empty, _) => Direction::Left,
             (_, _, _, _, ParticleType::Empty) => Direction::Right,
             _ => Direction::None,
@@ -209,8 +222,25 @@ impl SandGame {
             particle_down_right.p_type,
         ) {
             (_, ParticleType::Empty, _) => Direction::Down,
+            (_, ParticleType::Water, _) => Direction::Down,
+            (ParticleType::Empty, _, ParticleType::Empty) => {
+                if self.clock % 2 == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
+            (ParticleType::Water, _, ParticleType::Water) => {
+                if self.clock % 2 == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
             (ParticleType::Empty, _, _) => Direction::DownLeft,
+            (ParticleType::Water, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty) => Direction::DownRight,
+            (_, _, ParticleType::Water) => Direction::DownRight,
             _ => Direction::None,
         };
 
@@ -222,8 +252,11 @@ impl SandGame {
             _ => index_current,
         };
 
-        self.particles[index_current].p_type = ParticleType::Empty;
-        self.particles[index_new].p_type = ParticleType::Sand;
+        let type_current = self.particles[index_current].p_type;
+        let type_new = self.particles[index_new].p_type;
+
+        self.particles[index_current].p_type = type_new;
+        self.particles[index_new].p_type = type_current;
         self.particles[index_current].clock = self.clock.wrapping_add(1);
         self.particles[index_new].clock = self.clock.wrapping_add(1);
     }
