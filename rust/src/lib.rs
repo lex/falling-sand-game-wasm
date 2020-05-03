@@ -113,7 +113,9 @@ impl SandGame {
         }
 
         self.clock = self.clock.wrapping_add(1);
+    }
 
+    pub fn render(&mut self) {
         self.update_framebuffer();
         let f: &[u8] = &self.framebuffer;
         self.renderer.render(f, self.width, self.height);
