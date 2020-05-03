@@ -8,7 +8,6 @@ use wasm_bindgen::prelude::*;
 
 use rand::{Rng, SeedableRng};
 
-
 use particle::Direction;
 use particle::Particle;
 use particle::ParticleType;
@@ -90,8 +89,8 @@ impl SandGame {
     }
 
     pub fn step(&mut self) {
-        for y in 0..self.height {
-            for x in 0..self.width {
+        for x in 0..self.width {
+            for y in 0..self.height {
                 let index = self.get_index(x, y);
 
                 let particle = &self.particles[index];
@@ -177,6 +176,15 @@ impl SandGame {
             particle_right.p_type,
         ) {
             (_, ParticleType::Empty, _, _, _) => Direction::Down,
+            (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
+                if r == 0 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                }
+            }
+            (_, _, _, ParticleType::Empty, _) => Direction::Left,
+            (_, _, _, _, ParticleType::Empty) => Direction::Right,
             (ParticleType::Empty, _, ParticleType::Empty, _, _) => {
                 if r == 0 {
                     Direction::DownLeft
@@ -186,15 +194,6 @@ impl SandGame {
             }
             (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
-            (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
-                if r == 0 {
-                    Direction::Left
-                } else {
-                    Direction::Right
-                }
-            }
-            (_, _, _, _, ParticleType::Empty) => Direction::Right,
-            (_, _, _, ParticleType::Empty, _) => Direction::Left,
             _ => Direction::None,
         };
 
