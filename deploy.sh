@@ -4,8 +4,6 @@
 set -e
 
 # build
-wasm-pack build
-cd www
 npm run build
 
 # navigate into the build output directory
