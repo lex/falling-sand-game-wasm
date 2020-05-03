@@ -1,8 +1,8 @@
 extern crate web_sys;
 
 mod particle;
-mod utils;
 mod renderer;
+mod utils;
 
 use std::mem;
 use wasm_bindgen::prelude::*;
@@ -56,7 +56,11 @@ impl SandGame {
             }
         }
 
-        let renderer = Renderer {context: None, program_info: None, buffers: None};
+        let renderer = Renderer {
+            context: None,
+            program_info: None,
+            buffers: None,
+        };
 
         SandGame {
             width,
@@ -108,27 +112,15 @@ impl SandGame {
 
                 let position = (y * (self.width * 3) + x * 3) as usize;
 
-                let v: u8 = if p_type == ParticleType::Empty {
-                    255
-                } else {
-                    0
+                let (r, g, b) = match p_type {
+                    ParticleType::Empty => (0, 0, 0),
+                    ParticleType::Wall => (0, 255, 0),
+                    ParticleType::Sand => (194, 178, 128),
                 };
 
-                if p_type == ParticleType::Wall {
-                self.framebuffer[position] = 0;
-                self.framebuffer[position + 1] = 255;
-                self.framebuffer[position + 2] = 0;
-                } else if p_type == ParticleType::Sand {
-
-                self.framebuffer[position] = 255;
-                self.framebuffer[position + 1] = 255;
-                self.framebuffer[position + 2] = 255;
-                } else {
-                self.framebuffer[position] = 50;
-                self.framebuffer[position + 1] = 50;
-                self.framebuffer[position + 2] = 50;
-                }
-
+                self.framebuffer[position + 0] = r;
+                self.framebuffer[position + 1] = g;
+                self.framebuffer[position + 2] = b;
             }
         }
     }

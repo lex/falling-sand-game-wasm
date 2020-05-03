@@ -1,5 +1,4 @@
 use std::fmt;
-use wasm_bindgen::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Particle {
