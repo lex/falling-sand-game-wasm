@@ -2,14 +2,15 @@ extern crate web_sys;
 
 mod particle;
 mod utils;
+mod renderer;
 
-use std::fmt;
 use std::mem;
 use wasm_bindgen::prelude::*;
 
 use particle::Direction;
 use particle::Particle;
 use particle::ParticleType;
+use renderer::Renderer;
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -28,6 +29,7 @@ pub struct SandGame {
     input_buffer: Vec<particle::Particle>,
     output_buffer: Vec<particle::Particle>,
     framebuffer: Vec<u8>,
+    renderer: Renderer,
 }
 
 #[wasm_bindgen]
@@ -35,12 +37,11 @@ impl SandGame {
     pub fn new(width: u32, height: u32) -> SandGame {
         let mut input_buffer = Vec::new();
         let mut output_buffer = Vec::new();
-        let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| {0}).collect();
+        let framebuffer: Vec<u8> = (0..(width * height * 3)).map(|_| 0).collect();
 
         for y in 0..height {
             for x in 0..width {
                 let p_type = match (x % width, y % height, x % (width - 1), y % (height - 1)) {
-                    (16, 1, _, _) => ParticleType::Sand,
                     (0, _, _, _) => ParticleType::Wall,
                     (_, 0, _, _) => ParticleType::Wall,
                     (_, _, 0, _) => ParticleType::Wall,
@@ -55,25 +56,16 @@ impl SandGame {
             }
         }
 
+        let renderer = Renderer {context: None, program_info: None, buffers: None};
+
         SandGame {
             width,
             height,
             input_buffer,
             output_buffer,
-            framebuffer
+            framebuffer,
+            renderer,
         }
-    }
-
-    pub fn width(&self) -> u32 {
-        self.width
-    }
-
-    pub fn height(&self) -> u32 {
-        self.height
-    }
-
-    pub fn framebuffer(&self) -> *const u8{
-        self.framebuffer.as_ptr()
     }
 
     pub fn spawn(&mut self, x: u32, y: u32) {
@@ -99,7 +91,13 @@ impl SandGame {
         }
 
         self.update_framebuffer();
+        let f: &[u8] = &self.framebuffer;
+        self.renderer.render(f, self.width, self.height);
         self.swap_buffers();
+    }
+
+    pub fn initialize_webgl(&mut self) {
+        self.renderer.setup_webgl();
     }
 
     fn update_framebuffer(&mut self) {
@@ -110,11 +108,27 @@ impl SandGame {
 
                 let position = (y * (self.width * 3) + x * 3) as usize;
 
-                let v: u8 = if p_type == ParticleType::Empty {0} else {255};
+                let v: u8 = if p_type == ParticleType::Empty {
+                    255
+                } else {
+                    0
+                };
 
-                self.framebuffer[position] = v;
-                self.framebuffer[position + 1] = v;
-                self.framebuffer[position + 2] = v;
+                if p_type == ParticleType::Wall {
+                self.framebuffer[position] = 0;
+                self.framebuffer[position + 1] = 255;
+                self.framebuffer[position + 2] = 0;
+                } else if p_type == ParticleType::Sand {
+
+                self.framebuffer[position] = 255;
+                self.framebuffer[position + 1] = 255;
+                self.framebuffer[position + 2] = 255;
+                } else {
+                self.framebuffer[position] = 50;
+                self.framebuffer[position + 1] = 50;
+                self.framebuffer[position + 2] = 50;
+                }
+
             }
         }
     }
