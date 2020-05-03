@@ -36,6 +36,7 @@ enum ParticleType {
     Sand = 2,
     Water = 3,
     Plant = 4,
+    Fire = 5,
 }
 
 @Component

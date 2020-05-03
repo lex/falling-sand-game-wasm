@@ -82,6 +82,7 @@ impl SandGame {
             2 => ParticleType::Sand,
             3 => ParticleType::Water,
             4 => ParticleType::Plant,
+            5 => ParticleType::Fire,
             _ => ParticleType::Empty,
         };
 
@@ -105,6 +106,7 @@ impl SandGame {
                     ParticleType::Sand => self.update_sand(x, y),
                     ParticleType::Water => self.update_water(x, y),
                     ParticleType::Plant => self.update_plant(x, y),
+                    ParticleType::Fire => self.update_fire(x, y),
                     _ => (),
                 };
             }
@@ -135,6 +137,7 @@ impl SandGame {
                     ParticleType::Sand => (194, 178, 128),
                     ParticleType::Water => (128, 197, 222),
                     ParticleType::Plant => (50, 205, 50),
+                    ParticleType::Fire => (170, 16, 0),
                     _ => (255, 128, 128),
                 };
 
@@ -153,6 +156,72 @@ impl SandGame {
         let index_current = self.get_index(x, y);
         self.particles[index_current].p_type = ParticleType::Wall;
         self.particles[index_current].clock = self.clock.wrapping_add(1);
+    }
+
+    fn update_fire(&mut self, x: u32, y: u32) {
+        let index_current = self.get_index(x, y);
+
+        let index_down = self.get_index(x, y + 1);
+        let index_down_left = self.get_index(x - 1, y + 1);
+        let index_down_right = self.get_index(x + 1, y + 1);
+        let index_left = self.get_index(x - 1, y);
+        let index_right = self.get_index(x + 1, y);
+
+        let index_up = self.get_index(x, y - 1);
+        let index_up_left = self.get_index(x - 1, y - 1);
+        let index_up_right = self.get_index(x + 1, y - 1);
+
+        let particle_down = &self.particles[index_down];
+        let particle_down_left = &self.particles[index_down_left];
+        let particle_down_right = &self.particles[index_down_right];
+        let particle_left = &self.particles[index_left];
+        let particle_right = &self.particles[index_right];
+
+        let particle_up = &self.particles[index_up];
+        let particle_up_left = &self.particles[index_up_left];
+        let particle_up_right = &self.particles[index_up_right];
+
+        let direction = match (
+            particle_down_left.p_type,
+            particle_down.p_type,
+            particle_down_right.p_type,
+            particle_left.p_type,
+            particle_right.p_type,
+            particle_up.p_type,
+            particle_up_left.p_type,
+            particle_up_right.p_type,
+        ) {
+            (ParticleType::Plant, _, _, _, _, _, _, _) => Direction::DownLeft,
+            (_, ParticleType::Plant, _, _, _, _, _, _) => Direction::Down,
+            (_, _, ParticleType::Plant, _, _, _, _, _) => Direction::DownRight,
+            (_, _, _, ParticleType::Plant, _, _, _, _) => Direction::Left,
+            (_, _, _, _, ParticleType::Plant, _, _, _) => Direction::Right,
+            (_, _, _, _, _, ParticleType::Plant, _, _) => Direction::Up,
+            (_, _, _, _, _, _, ParticleType::Plant, _) => Direction::UpLeft,
+            (_, _, _, _, _, _, _, ParticleType::Plant) => Direction::UpRight,
+            _ => Direction::None,
+        };
+
+        let index_new = match direction {
+            Direction::Down => index_down,
+            Direction::DownLeft => index_down_left,
+            Direction::DownRight => index_down_right,
+            Direction::Left => index_left,
+            Direction::Right => index_right,
+            Direction::Up => index_up,
+            Direction::UpLeft => index_up_left,
+            Direction::UpRight => index_up_right,
+            Direction::None => index_current,
+            _ => index_current,
+        };
+
+        self.particles[index_current].p_type = ParticleType::Empty;
+        self.particles[index_current].clock = self.clock.wrapping_add(1);
+
+        if index_new != index_current {
+            self.particles[index_new].p_type = ParticleType::Fire;
+            self.particles[index_new].clock = self.clock.wrapping_add(1);
+        }
     }
 
     fn update_plant(&mut self, x: u32, y: u32) {
@@ -178,8 +247,6 @@ impl SandGame {
         let particle_up_left = &self.particles[index_up_left];
         let particle_up_right = &self.particles[index_up_right];
 
-        let r = self.rng.gen_range(0, 2);
-
         let direction = match (
             particle_down_left.p_type,
             particle_down.p_type,
@@ -193,9 +260,9 @@ impl SandGame {
             (ParticleType::Water, _, _, _, _, _, _, _) => Direction::DownLeft,
             (_, ParticleType::Water, _, _, _, _, _, _) => Direction::Down,
             (_, _, ParticleType::Water, _, _, _, _, _) => Direction::DownRight,
-            (_, _, _, ParticleType::Water,  _, _, _, _) => Direction::Left,
-            (_, _, _, _, ParticleType::Water,  _, _, _) => Direction::Right,
-            (_, _, _, _, _, ParticleType::Water,  _, _) => Direction::Up,
+            (_, _, _, ParticleType::Water, _, _, _, _) => Direction::Left,
+            (_, _, _, _, ParticleType::Water, _, _, _) => Direction::Right,
+            (_, _, _, _, _, ParticleType::Water, _, _) => Direction::Up,
             (_, _, _, _, _, _, ParticleType::Water, _) => Direction::UpLeft,
             (_, _, _, _, _, _, _, ParticleType::Water) => Direction::UpRight,
             _ => Direction::None,
