@@ -5,7 +5,6 @@ mod renderer;
 mod utils;
 
 use wasm_bindgen::prelude::*;
-
 use rand::{Rng, SeedableRng};
 
 use particle::Direction;
@@ -32,6 +31,7 @@ pub struct SandGame {
     renderer: Renderer,
     clock: u8,
     rng: rand_pcg::Lcg64Xsh32,
+    time: f32,
 }
 
 #[wasm_bindgen]
@@ -71,6 +71,7 @@ impl SandGame {
             renderer,
             clock: 0,
             rng: rng,
+            time: 0.0,
         }
     }
 
@@ -113,12 +114,13 @@ impl SandGame {
         }
 
         self.clock = self.clock.wrapping_add(1);
+        self.time += 0.16;
     }
 
     pub fn render(&mut self) {
         self.update_framebuffer();
         let f: &[u8] = &self.framebuffer;
-        self.renderer.render(f, self.width, self.height);
+        self.renderer.render(f, self.width, self.height, self.time);
     }
 
     pub fn initialize_webgl(&mut self) {

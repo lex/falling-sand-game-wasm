@@ -9,6 +9,7 @@ pub struct ProgramInfo {
     pub a_vertex_position: i32,
     pub a_texture_coordinate: i32,
     pub u_sampler: Option<WebGlUniformLocation>,
+    pub u_time: Option<WebGlUniformLocation>,
     pub program: Option<WebGlProgram>,
 }
 
@@ -47,7 +48,7 @@ impl Renderer {
         Ok(())
     }
 
-    pub fn render(&self, framebuffer: &[u8], width: u32, height: u32) {
+    pub fn render(&self, framebuffer: &[u8], width: u32, height: u32, time: f32) {
         let context = self.context.as_ref().unwrap();
         let buffers = self.buffers.as_ref().unwrap();
         let program_info = self.program_info.as_ref().unwrap();
@@ -60,6 +61,7 @@ impl Renderer {
         let a_vertex_position = program_info.a_vertex_position;
         let a_texture_coordinate = program_info.a_texture_coordinate;
         let u_sampler = program_info.u_sampler.as_ref();
+        let u_time = program_info.u_time.as_ref();
 
         // vertex buffer
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&vertex_buffer));
@@ -116,7 +118,11 @@ impl Renderer {
 
         // uniforms
         if let Some(u) = &u_sampler {
-            context.uniform1i(Some(u), WebGlRenderingContext::TEXTURE0 as i32);
+            context.uniform1i(Some(u), 0);
+        }
+
+        if let Some(u) = &u_time {
+            context.uniform1f(Some(u), time);
         }
 
         // clear
@@ -284,9 +290,11 @@ impl Renderer {
             r#"
             varying highp vec2 vTextureCoord;
             uniform sampler2D uSampler;
+            uniform highp float uTime;
 
             void main() {
-                gl_FragColor = texture2D(uSampler, vTextureCoord);
+                vec4 color = texture2D(uSampler, vTextureCoord);
+                gl_FragColor = color;
             }
         "#,
         )?;
@@ -298,12 +306,14 @@ impl Renderer {
         let a_vertex_position = context.get_attrib_location(&program, "aVertexPosition");
         let a_texture_coordinate = context.get_attrib_location(&program, "aTextureCoord");
         let u_sampler = context.get_uniform_location(&program, "uSampler");
+        let u_time = context.get_uniform_location(&program, "uTime");
 
         let program_info = ProgramInfo {
             program: Some(program),
             a_vertex_position: a_vertex_position,
             a_texture_coordinate: a_texture_coordinate,
             u_sampler: u_sampler,
+            u_time: u_time,
         };
 
         return Ok(program_info);
