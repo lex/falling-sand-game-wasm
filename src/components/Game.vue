@@ -12,22 +12,22 @@
       >
     </div>
     <div>
-      <p>{{ particleTypeAsString(particleType) }}</p>
-    </div>
-    <div>
-      <button
-        v-for="particleType in particleTypes"
-        :key="particleType"
-        v-on:click="selectType(particleType)"
-      >
-        {{ particleTypeAsString(particleType) }}
-      </button>
+      <b-button-group size="lg">
+        <b-button
+          v-for="pType in particleTypes"
+          :key="pType"
+          :variant="pType == particleType ? 'success' : ''"
+          v-on:click="selectType(pType)"
+        >
+          {{ particleTypeAsString(pType) }}
+        </b-button>
+      </b-button-group>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import type { SandGame } from "../../pkg/index";
 
 enum ParticleType {
@@ -55,7 +55,7 @@ export default class Game extends Vue {
   private mouseX = 0;
   private mouseY = 0;
   private drawing = false;
-  private particleType = ParticleType.Sand;
+  particleType = ParticleType.Sand;
 
   async mounted() {
     await this.loadWasm();
@@ -131,4 +131,9 @@ export default class Game extends Vue {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+</style>
