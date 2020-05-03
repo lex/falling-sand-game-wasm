@@ -288,9 +288,11 @@ impl Renderer {
             &context,
             WebGlRenderingContext::FRAGMENT_SHADER,
             r#"
+            precision mediump float;
+
             varying highp vec2 vTextureCoord;
             uniform sampler2D uSampler;
-            uniform highp float uTime;
+            uniform float uTime;
 
             void main() {
                 vec4 color = texture2D(uSampler, vTextureCoord);
