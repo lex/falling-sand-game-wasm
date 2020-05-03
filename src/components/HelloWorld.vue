@@ -1,7 +1,11 @@
 <template>
   <div class="hello">
-    <canvas id="canvas" width="256" height="256"> </canvas>
-    <button v-on:click="spawn">spawn</button>
+    <div>
+      <canvas id="canvas" :width="canvasWidth" :height="canvasHeight">rip</canvas>
+    </div>
+    <div>
+      <button v-on:click="spawn">spawn</button>
+    </div>
   </div>
 </template>
 
@@ -17,6 +21,13 @@ export default class HelloWorld extends Vue {
   private wasm!: any;
   private sandGame!: SandGame;
 
+  private gameWidth = 256;
+  private gameHeight = 256;
+
+  private canvasScale = 3;
+  private canvasWidth = this.gameWidth * this.canvasScale;
+  private canvasHeight = this.gameHeight * this.canvasScale;
+
   async mounted() {
     await this.loadWasm();
     this.setupGame();
@@ -29,7 +40,7 @@ export default class HelloWorld extends Vue {
   }
 
   setupGame() {
-    this.sandGame = this.wasm.SandGame.new(64, 64);
+    this.sandGame = this.wasm.SandGame.new(this.gameWidth, this.gameHeight);
     this.sandGame.initialize_webgl();
   }
 
