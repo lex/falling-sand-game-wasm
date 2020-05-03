@@ -3,7 +3,7 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production'
-    ? '/falling-sand-game/'
+    ? '/falling-sand-game-wasm/'
     : '/',
   configureWebpack: {
     plugins: [
