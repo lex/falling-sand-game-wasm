@@ -107,11 +107,11 @@ impl Renderer {
             .tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
                 WebGlRenderingContext::TEXTURE_2D,
                 0,
-                WebGlRenderingContext::RGB as i32,
+                WebGlRenderingContext::RGBA as i32,
                 width as i32,
                 height as i32,
                 0,
-                WebGlRenderingContext::RGB,
+                WebGlRenderingContext::RGBA,
                 WebGlRenderingContext::UNSIGNED_BYTE,
                 Some(framebuffer),
             );

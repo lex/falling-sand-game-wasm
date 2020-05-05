@@ -22,12 +22,10 @@ use particle::Particle;
 use particle::ParticleType;
 use renderer::Renderer;
 
-const BYTES_PER_PIXEL: usize = 3;
-
 #[wasm_bindgen]
 pub struct SandGame {
     particles: Vec<Particle>,
-    framebuffer: Vec<u8>,
+    framebuffer: Vec<u32>,
     width: usize,
     height: usize,
     renderer: Renderer,
@@ -45,7 +43,7 @@ impl SandGame {
         let height = height as usize;
 
         let mut particles: Vec<Particle> = vec![Particle { p_type: ParticleType::Empty, clock: 0}; width * height];
-        let framebuffer: Vec<u8> = vec![0; width * height * BYTES_PER_PIXEL];
+        let framebuffer: Vec<u32> = vec![0; width * height];
 
         let rng = rand_pcg::Pcg32::seed_from_u64(419);
 
@@ -127,7 +125,14 @@ impl SandGame {
     }
 
     pub fn render(&mut self) {
-        self.renderer.render(&self.framebuffer, self.width as u32, self.height as u32, self.time);
+        let f: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                self.framebuffer.as_ptr() as *const u8,
+                self.framebuffer.len() * std::mem::size_of::<u32>(),
+            )
+        };
+
+        self.renderer.render(f, self.width as u32, self.height as u32, self.time);
     }
 
     pub fn initialize_webgl(&mut self) {
@@ -139,10 +144,9 @@ impl SandGame {
             for x in 0..self.width {
                 let index = self.get_index(x, y);
                 let particle = &self.particles[index];
+                let a: u32 = 255;
 
-                let position = (y * (self.width * BYTES_PER_PIXEL) + x * BYTES_PER_PIXEL) as usize;
-
-                let (r, g, b) = match particle.p_type {
+                let (r, g, b): (u32, u32, u32) = match particle.p_type {
                     ParticleType::Empty => (0, 0, 0),
                     ParticleType::Wall => (220, 220, 220),
                     ParticleType::Sand => (194, 178, 128),
@@ -152,9 +156,13 @@ impl SandGame {
                     _ => (255, 128, 128),
                 };
 
-                self.framebuffer[position + 0] = r;
-                self.framebuffer[position + 1] = g;
-                self.framebuffer[position + 2] = b;
+                let mut v: u32 = (0x0000 | a) << 8;
+
+                v = (v | b) << 8;
+                v = (v | g) << 8;
+                v = v | r;
+
+                self.framebuffer[index] = v;
             }
         }
     }
