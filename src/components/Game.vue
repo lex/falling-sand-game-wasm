@@ -48,18 +48,18 @@ export default class Game extends Vue {
   private gameWidth = 256;
   private gameHeight = 256;
 
-  private canvasScale = 3;
-  private canvasWidth = this.gameWidth * this.canvasScale;
-  private canvasHeight = this.gameHeight * this.canvasScale;
+  private canvasScale = 2;
 
   private mouseX = 0;
   private mouseY = 0;
   private drawing = false;
-  particleType = ParticleType.Sand;
+
+  private particleType = ParticleType.Sand;
 
   async mounted() {
     await this.loadWasm();
     this.setupGame();
+
     requestAnimationFrame(this.renderLoop);
   }
 
@@ -79,6 +79,13 @@ export default class Game extends Vue {
 
   private onMouseUp() {
     this.drawing = false;
+  }
+
+  get canvasWidth() {
+    return this.gameWidth * this.canvasScale;
+  }
+  get canvasHeight() {
+    return this.gameHeight * this.canvasScale;
   }
 
   private setupGame() {
@@ -113,6 +120,7 @@ export default class Game extends Vue {
     }
 
     this.sandGame.step();
+    this.sandGame.update_framebuffer();
     this.sandGame.render();
 
     requestAnimationFrame(this.renderLoop);
