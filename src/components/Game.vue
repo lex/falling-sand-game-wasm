@@ -1,6 +1,31 @@
 <template>
   <b-container fluid>
-    <div>
+    <b-navbar ref="navbar" toggleable="lg" type="dark" variant="dark">
+      <b-navbar-brand href="#">Sand Game</b-navbar-brand>
+
+      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+
+      <b-collapse id="nav-collapse" is-nav>
+        <b-navbar-nav>
+          <b-nav-item
+            v-for="pType in particleTypes"
+            :key="pType"
+            :active="pType == particleType"
+            v-on:click="selectType(pType)"
+          >
+            {{ particleTypeAsString(pType) }}
+          </b-nav-item>
+        </b-navbar-nav>
+
+        <b-navbar-nav class="ml-auto">
+          <b-nav-item-dropdown text="Debug" right>
+            <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
+            <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
+          </b-nav-item-dropdown>
+        </b-navbar-nav>
+      </b-collapse>
+    </b-navbar>
+    <div id="canvas-container" ref="canvascontainer">
       <canvas
         ref="canvas"
         id="canvas"
@@ -14,19 +39,6 @@
         v-on:touchmove="onTouchMove"
         >rip</canvas
       >
-    </div>
-    <div>
-      <b-button-group size="lg">
-        <b-button
-          v-for="pType in particleTypes"
-          :key="pType"
-          :variant="pType == particleType ? 'success' : ''"
-          v-on:click="selectType(pType)"
-        >
-          {{ particleTypeAsString(pType) }}
-        </b-button>
-        <b-button v-on:click="debugFill">debug fill</b-button>
-      </b-button-group>
     </div>
   </b-container>
 </template>
@@ -53,7 +65,11 @@ export default class Game extends Vue {
   private gameWidth = 256;
   private gameHeight = 256;
 
-  private canvasScale = 2;
+  private windowWidth = window.innerWidth;
+  private windowHeight = window.innerHeight;
+
+  private canvasScaleX = 1;
+  private canvasScaleY = 1;
   private canvas?: HTMLCanvasElement = undefined;
 
   private mouseX = 0;
@@ -66,11 +82,20 @@ export default class Game extends Vue {
 
   async mounted() {
     this.canvas = this.$refs.canvas as HTMLCanvasElement;
+    this.updateScaling();
 
     await this.loadWasm();
     this.setupGame();
 
     requestAnimationFrame(this.renderLoop);
+  }
+
+  private updateScaling() {
+    const canvasContainer = this.$refs.canvascontainer as HTMLElement;
+    const scaleX = window.innerWidth / this.gameWidth;
+    const scaleY = (window.innerHeight - canvasContainer.offsetTop) / this.gameHeight;
+    this.canvasScaleX = scaleX;
+    this.canvasScaleY = scaleY;
   }
 
   private async loadWasm() {
@@ -79,8 +104,8 @@ export default class Game extends Vue {
   }
 
   private onMouseMove(event: MouseEvent) {
-    this.mouseX = Math.floor(event.offsetX / this.canvasScale);
-    this.mouseY = Math.floor(event.offsetY / this.canvasScale);
+    this.mouseX = Math.floor(event.offsetX / this.canvasScaleX);
+    this.mouseY = Math.floor(event.offsetY / this.canvasScaleY);
   }
 
   private onMouseDown() {
@@ -114,18 +139,18 @@ export default class Game extends Vue {
     const yy = this.canvas?.getBoundingClientRect().top ?? 0;
 
     for (const touch of event.changedTouches) {
-      const x = Math.floor((touch.pageX - xx) / this.canvasScale);
-      const y = Math.floor((touch.pageY - yy) / this.canvasScale);
+      const x = Math.floor((touch.pageX - xx) / this.canvasScaleX);
+      const y = Math.floor((touch.pageY - yy) / this.canvasScaleY);
       this.mouseX = x;
       this.mouseY = y;
     }
   }
 
   get canvasWidth() {
-    return this.gameWidth * this.canvasScale;
+    return this.gameWidth * this.canvasScaleX;
   }
   get canvasHeight() {
-    return this.gameHeight * this.canvasScale;
+    return this.gameHeight * this.canvasScaleY;
   }
 
   private setupGame() {
@@ -182,6 +207,14 @@ export default class Game extends Vue {
       }
     }
   }
+
+  private clear() {
+    for (let y = 1; y < this.gameHeight - 1; ++y) {
+      for (let x = 1; x < this.gameWidth - 1; ++x) {
+        this.sandGame.spawn(x, y, ParticleType.Empty);
+      }
+    }
+  }
 }
 </script>
 
@@ -190,5 +223,9 @@ export default class Game extends Vue {
 .btn:focus {
   outline: none;
   box-shadow: none;
+}
+.container-fluid {
+  padding-left: 0px;
+  padding-right: 0px;
 }
 </style>
