@@ -1,13 +1,17 @@
 <template>
-  <div class="hello">
+  <b-container fluid>
     <div>
       <canvas
+        ref="canvas"
         id="canvas"
         :width="canvasWidth"
         :height="canvasHeight"
         v-on:mousemove="onMouseMove"
         v-on:mousedown="onMouseDown"
         v-on:mouseup="onMouseUp"
+        v-on:touchstart="onTouchStart"
+        v-on:touchend="onTouchEnd"
+        v-on:touchmove="onTouchMove"
         >rip</canvas
       >
     </div>
@@ -21,9 +25,10 @@
         >
           {{ particleTypeAsString(pType) }}
         </b-button>
+        <b-button v-on:click="debugFill">debug fill</b-button>
       </b-button-group>
     </div>
-  </div>
+  </b-container>
 </template>
 
 <script lang="ts">
@@ -49,14 +54,19 @@ export default class Game extends Vue {
   private gameHeight = 256;
 
   private canvasScale = 2;
+  private canvas?: HTMLCanvasElement = undefined;
 
   private mouseX = 0;
   private mouseY = 0;
   private drawing = false;
 
+  private touching = false;
+
   private particleType = ParticleType.Sand;
 
   async mounted() {
+    this.canvas = this.$refs.canvas as HTMLCanvasElement;
+
     await this.loadWasm();
     this.setupGame();
 
@@ -81,6 +91,36 @@ export default class Game extends Vue {
     this.drawing = false;
   }
 
+  private onTouchStart(event: TouchEvent) {
+    event.preventDefault();
+    this.onTouchMove(event);
+    this.drawing = true;
+  }
+
+  private onTouchEnd(event: TouchEvent) {
+    event.preventDefault();
+    this.drawing = false;
+  }
+
+  private onTouchCancel(event: TouchEvent) {
+    event.preventDefault();
+    this.drawing = false;
+  }
+
+  private onTouchMove(event: TouchEvent) {
+    event.preventDefault();
+
+    const xx = this.canvas?.getBoundingClientRect().left ?? 0;
+    const yy = this.canvas?.getBoundingClientRect().top ?? 0;
+
+    for (const touch of event.changedTouches) {
+      const x = Math.floor((touch.pageX - xx) / this.canvasScale);
+      const y = Math.floor((touch.pageY - yy) / this.canvasScale);
+      this.mouseX = x;
+      this.mouseY = y;
+    }
+  }
+
   get canvasWidth() {
     return this.gameWidth * this.canvasScale;
   }
@@ -93,30 +133,27 @@ export default class Game extends Vue {
     this.sandGame.initialize_webgl();
   }
 
-  private draw() {
+  private draw(x: number, y: number) {
     const r = 10;
-    const x = this.mouseX;
-    const y = this.mouseY;
 
-      for (let i = 0; i < 360; i += 10)
-      {
-            const angle = i;
-            const x1 = Math.floor(r * Math.cos(angle * Math.PI / 180));
-            const y1 = Math.floor(r * Math.sin(angle * Math.PI / 180));
-            const spawnX = x + x1;
-            const spawnY = y + y1;
+    for (let i = 0; i < 360; i += 10) {
+        const angle = i;
+        const x1 = Math.floor(r * Math.cos(angle * Math.PI / 180));
+        const y1 = Math.floor(r * Math.sin(angle * Math.PI / 180));
+        const spawnX = x + x1;
+        const spawnY = y + y1;
 
-            if (spawnX < 2 || spawnX > this.gameWidth - 2 || spawnY < 2 || spawnY > this.gameHeight - 2) {
-              continue;
-            }
+        if (spawnX < 2 || spawnX > this.gameWidth - 2 || spawnY < 2 || spawnY > this.gameHeight - 2) {
+          continue;
+        }
 
-            this.sandGame.spawn(x+x1, y+y1, this.particleType);
-      }
+        this.sandGame.spawn(x+x1, y+y1, this.particleType);
+    }
   }
 
   private renderLoop() {
     if (this.drawing) {
-      this.draw();
+      this.draw(this.mouseX, this.mouseY);
     }
 
     this.sandGame.step();
@@ -135,6 +172,15 @@ export default class Game extends Vue {
 
   get particleTypes(): Array<number> {
     return Object.keys(ParticleType).filter(key => !isNaN(Number(key))).map(k => Number(k));
+  }
+
+  private debugFill() {
+    for (let y = 1; y < this.gameHeight - 1; ++y) {
+      for (let x = 1; x < this.gameWidth - 1; ++x) {
+        const type = ~~(Math.random() * 2) == 0 ? ParticleType.Sand : ParticleType.Water;
+        this.sandGame.spawn(x, y, type);
+      }
+    }
   }
 }
 </script>
