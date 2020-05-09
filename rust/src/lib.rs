@@ -25,7 +25,7 @@ use renderer::Renderer;
 #[wasm_bindgen]
 pub struct SandGame {
     particles: Vec<Particle>,
-    framebuffer: Vec<u32>,
+    clocks: Vec<u8>,
     width: usize,
     height: usize,
     renderer: Renderer,
@@ -42,8 +42,8 @@ impl SandGame {
         let width = width as usize;
         let height = height as usize;
 
-        let mut particles: Vec<Particle> = vec![Particle { p_type: ParticleType::Empty, clock: 0}; width * height];
-        let framebuffer: Vec<u32> = vec![0; width * height];
+        let mut particles: Vec<Particle> = vec![Particle { p_type: ParticleType::Empty}; width * height];
+        let clocks: Vec<u8> = vec![0; width * height];
 
         let rng = rand_pcg::Pcg32::seed_from_u64(419);
 
@@ -72,7 +72,7 @@ impl SandGame {
 
         SandGame {
             particles,
-            framebuffer,
+            clocks,
             width,
             height,
             renderer,
@@ -105,7 +105,7 @@ impl SandGame {
 
                 let particle = &self.particles[index];
 
-                if particle.clock.wrapping_sub(self.clock) == 1 {
+                if self.clocks[index].wrapping_sub(self.clock) == 1 {
                     continue;
                 }
 
@@ -127,8 +127,8 @@ impl SandGame {
     pub fn render(&mut self) {
         let f: &[u8] = unsafe {
             std::slice::from_raw_parts(
-                self.framebuffer.as_ptr() as *const u8,
-                self.framebuffer.len() * std::mem::size_of::<u32>(),
+                self.particles.as_ptr() as *const u8,
+                self.particles.len() * std::mem::size_of::<u8>(),
             )
         };
 
@@ -137,34 +137,6 @@ impl SandGame {
 
     pub fn initialize_webgl(&mut self) {
         self.renderer.setup_webgl();
-    }
-
-    pub fn update_framebuffer(&mut self) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let index = self.get_index(x, y);
-                let particle = &self.particles[index];
-                let a: u32 = 255;
-
-                let (r, g, b): (u32, u32, u32) = match particle.p_type {
-                    ParticleType::Empty => (0, 0, 0),
-                    ParticleType::Wall => (220, 220, 220),
-                    ParticleType::Sand => (194, 178, 128),
-                    ParticleType::Water => (128, 197, 222),
-                    ParticleType::Plant => (50, 205, 50),
-                    ParticleType::Fire => (170, 16, 0),
-                    _ => (255, 128, 128),
-                };
-
-                let mut v: u32 = (0x0000 | a) << 8;
-
-                v = (v | b) << 8;
-                v = (v | g) << 8;
-                v = v | r;
-
-                self.framebuffer[index] = v;
-            }
-        }
     }
 }
 
@@ -176,7 +148,7 @@ impl SandGame {
     fn update_wall(&mut self, x: usize, y: usize) {
         let index_current = self.get_index(x, y);
         self.particles[index_current].p_type = ParticleType::Wall;
-        self.particles[index_current].clock = self.clock.wrapping_add(1);
+        self.clocks[index_current] = self.clock.wrapping_add(1);
     }
 
     fn update_fire(&mut self, x: usize, y: usize) {
@@ -237,11 +209,11 @@ impl SandGame {
         };
 
         self.particles[index_current].p_type = ParticleType::Empty;
-        self.particles[index_current].clock = self.clock.wrapping_add(1);
+        self.clocks[index_current] = self.clock.wrapping_add(1);
 
         if index_new != index_current {
             self.particles[index_new].p_type = ParticleType::Fire;
-            self.particles[index_new].clock = self.clock.wrapping_add(1);
+            self.clocks[index_new] = self.clock.wrapping_add(1);
         }
     }
 
@@ -304,8 +276,8 @@ impl SandGame {
 
         self.particles[index_current].p_type = ParticleType::Plant;
         self.particles[index_new].p_type = ParticleType::Plant;
-        self.particles[index_current].clock = self.clock.wrapping_add(1);
-        self.particles[index_new].clock = self.clock.wrapping_add(1);
+        self.clocks[index_current] = self.clock.wrapping_add(1);
+        self.clocks[index_new] = self.clock.wrapping_add(1);
     }
 
     fn update_water(&mut self, x: usize, y: usize) {
@@ -365,8 +337,8 @@ impl SandGame {
 
         self.particles[index_current].p_type = ParticleType::Empty;
         self.particles[index_new].p_type = ParticleType::Water;
-        self.particles[index_current].clock = self.clock.wrapping_add(1);
-        self.particles[index_new].clock = self.clock.wrapping_add(1);
+        self.clocks[index_current] = self.clock.wrapping_add(1);
+        self.clocks[index_new] = self.clock.wrapping_add(1);
     }
 
     fn update_sand(&mut self, x: usize, y: usize) {
@@ -422,7 +394,7 @@ impl SandGame {
 
         self.particles[index_current].p_type = type_new;
         self.particles[index_new].p_type = type_current;
-        self.particles[index_current].clock = self.clock.wrapping_add(1);
-        self.particles[index_new].clock = self.clock.wrapping_add(1);
+        self.clocks[index_current] = self.clock.wrapping_add(1);
+        self.clocks[index_new] = self.clock.wrapping_add(1);
     }
 }

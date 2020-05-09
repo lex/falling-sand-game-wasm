@@ -1,7 +1,7 @@
+#[repr(C)]
 #[derive(Clone)]
 pub struct Particle {
     pub p_type: ParticleType,
-    pub clock: u8,
 }
 
 #[repr(u8)]

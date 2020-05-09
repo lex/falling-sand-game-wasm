@@ -107,11 +107,11 @@ impl Renderer {
             .tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
                 WebGlRenderingContext::TEXTURE_2D,
                 0,
-                WebGlRenderingContext::RGBA as i32,
+                WebGlRenderingContext::ALPHA as i32,
                 width as i32,
                 height as i32,
                 0,
-                WebGlRenderingContext::RGBA,
+                WebGlRenderingContext::ALPHA,
                 WebGlRenderingContext::UNSIGNED_BYTE,
                 Some(framebuffer),
             );
@@ -296,6 +296,29 @@ impl Renderer {
 
             void main() {
                 vec4 color = texture2D(uSampler, vTextureCoord);
+
+                if (color.a == (5.0 / 255.0)) {
+                    // fire
+                    color = vec4(170.0/255.0, 16.0/255.0, 0.0/255.0, 1.0);
+                } else if (color.a == (4.0 / 255.0)) {
+                    // plant
+                    color = vec4(50.0/255.0, 205.0/255.0, 50.0/255.0, 1.0);
+                } else if (color.a == (3.0 / 255.0)) {
+                    // water
+                    color = vec4(128.0/255.0, 197.0/255.0, 222.0/255.0, 1.0);
+                } else if (color.a == (2.0 / 255.0)) {
+                    // sand
+                    color = vec4(194.0/255.0, 178.0/255.0, 128.0/255.0, 1.0);
+                } else if (color.a == (1.0 / 255.0)) {
+                    // wall
+                    color = vec4(220.0/255.0, 220.0/255.0, 220.0/255.0, 1.0);
+                } else if (color.a == 0.0) {
+                    // empty
+                    color = vec4(0.0, 0.0, 0.0, 1.0);
+                } else {
+                    color = vec4(1.0, 0.0, 0.0, 1.0);
+                }
+
                 gl_FragColor = color;
             }
         "#,

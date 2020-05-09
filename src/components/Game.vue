@@ -120,7 +120,6 @@ export default class Game extends Vue {
     }
 
     this.sandGame.step();
-    this.sandGame.update_framebuffer();
     this.sandGame.render();
 
     requestAnimationFrame(this.renderLoop);
