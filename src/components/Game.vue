@@ -40,7 +40,7 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item
             v-for="pType in particleTypes"
-            :key="pType"
+            :key="`particle-type-${pType}`"
             :active="pType == particleType"
             v-on:click="selectType(pType)"
             >{{ particleTypeAsString(pType) }}</b-nav-item
@@ -50,11 +50,13 @@
 
       <b-collapse id="brush-size-collapse" is-nav>
         <b-navbar-nav class="ml-auto">
-          <b-nav-item v-on:click="setBrushSize(1)">Tiny</b-nav-item>
-          <b-nav-item v-on:click="setBrushSize(3)">Small</b-nav-item>
-          <b-nav-item v-on:click="setBrushSize(5)">Medium</b-nav-item>
-          <b-nav-item v-on:click="setBrushSize(8)">Large</b-nav-item>
-          <b-nav-item v-on:click="setBrushSize(10)">Extra Large</b-nav-item>
+          <b-nav-item
+            v-for="bSize in brushSizes"
+            :key="`brush-size-${bSize}`"
+            :active="bSize == brushSize"
+            v-on:click="setBrushSize(bSize)"
+            >{{ brushSizeAsString(bSize) }}</b-nav-item
+          >
         </b-navbar-nav>
       </b-collapse>
 
@@ -62,7 +64,6 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item v-on:click="clear">Clear</b-nav-item>
           <b-nav-item v-on:click="debugFill">Fill</b-nav-item>
-          <b-nav-item v-on:click="updateScaling">Update scaling</b-nav-item>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -95,6 +96,14 @@ enum ParticleType {
     Water = 3,
     Plant = 4,
     Fire = 5,
+}
+
+enum BrushSize {
+  Tiny = 1,
+  Small = 3,
+  Medium = 5,
+  Large = 8,
+  ExtraLarge = 10,
 }
 
 @Component
@@ -260,6 +269,10 @@ export default class Game extends Vue {
 
   get particleTypes(): Array<number> {
     return Object.keys(ParticleType).filter(key => !isNaN(Number(key))).map(k => Number(k));
+  }
+
+  get brushSizes(): Array<number> {
+    return Object.keys(BrushSize).filter(key => !isNaN(Number(key))).map(k => Number(k));
   }
 
   private debugFill() {
