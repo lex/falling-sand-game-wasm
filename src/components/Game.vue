@@ -96,6 +96,7 @@ enum ParticleType {
     Water = 3,
     Plant = 4,
     Fire = 5,
+    Oil = 6,
 }
 
 enum BrushSize {

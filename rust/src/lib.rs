@@ -96,6 +96,7 @@ impl SandGame {
             3 => ParticleType::Water,
             4 => ParticleType::Plant,
             5 => ParticleType::Fire,
+            6 => ParticleType::Oil,
             _ => ParticleType::Empty,
         };
 
@@ -120,6 +121,7 @@ impl SandGame {
                     ParticleType::Water => self.update_water(x, y),
                     ParticleType::Plant => self.update_plant(x, y),
                     ParticleType::Fire => self.update_fire(x, y),
+                    ParticleType::Oil => self.update_oil(x, y),
                     _ => (),
                 };
             }
@@ -161,6 +163,71 @@ impl SandGame {
         self.clocks[index_current] = self.clock.wrapping_add(1);
     }
 
+    fn update_oil(&mut self, x: usize, y: usize) {
+        let index_current = self.get_index(x, y);
+        let index_down = self.get_index(x, y + 1);
+        let index_down_left = self.get_index(x - 1, y + 1);
+        let index_down_right = self.get_index(x + 1, y + 1);
+        let index_left = self.get_index(x - 1, y);
+        let index_right = self.get_index(x + 1, y);
+
+        let particle_down = &self.particles[index_down];
+        let particle_down_left = &self.particles[index_down_left];
+        let particle_down_right = &self.particles[index_down_right];
+        let particle_left = &self.particles[index_left];
+        let particle_right = &self.particles[index_right];
+
+        let r = self.rng.gen_range(0, 2);
+
+        let direction = match (
+            particle_down_left.p_type,
+            particle_down.p_type,
+            particle_down_right.p_type,
+            particle_left.p_type,
+            particle_right.p_type,
+        ) {
+            (_, ParticleType::Empty, _, _, _) => Direction::Down,
+            (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
+                if r == 0 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                }
+            }
+            (_, _, _, ParticleType::Empty, _) => Direction::Left,
+            (_, _, _, _, ParticleType::Empty) => Direction::Right,
+            (ParticleType::Empty, _, ParticleType::Empty, _, _) => {
+                if r == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
+            (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
+            (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
+            _ => Direction::None,
+        };
+
+        let index_new = match direction {
+            Direction::Down => index_down,
+            Direction::DownLeft => index_down_left,
+            Direction::DownRight => index_down_right,
+            Direction::Left => index_left,
+            Direction::Right => index_right,
+            Direction::None => index_current,
+            _ => index_current,
+        };
+
+        if direction == Direction::None {
+            return;
+        }
+
+        self.particles[index_current].p_type = ParticleType::Empty;
+        self.particles[index_new].p_type = ParticleType::Oil;
+        self.clocks[index_current] = self.clock.wrapping_add(1);
+        self.clocks[index_new] = self.clock.wrapping_add(1);
+    }
+
     fn update_fire(&mut self, x: usize, y: usize) {
         let index_current = self.get_index(x, y);
 
@@ -187,7 +254,7 @@ impl SandGame {
         {
             let particle = &self.particles[*index];
 
-            if particle.p_type == ParticleType::Plant {
+            if particle.p_type == ParticleType::Plant || particle.p_type == ParticleType::Oil {
                 let r = self.rng.gen_range(0, 11);
 
                 if r < 9 {
@@ -265,6 +332,7 @@ impl SandGame {
             particle_left.p_type,
             particle_right.p_type,
         ) {
+            (_, ParticleType::Oil, _, _, _) => Direction::Down,
             (_, ParticleType::Empty, _, _, _) => Direction::Down,
             (_, _, _, ParticleType::Empty, ParticleType::Empty) => {
                 if r == 0 {
@@ -301,8 +369,11 @@ impl SandGame {
             return;
         }
 
-        self.particles[index_current].p_type = ParticleType::Empty;
-        self.particles[index_new].p_type = ParticleType::Water;
+        let type_current = self.particles[index_current].p_type;
+        let type_new = self.particles[index_new].p_type;
+
+        self.particles[index_current].p_type = type_new;
+        self.particles[index_new].p_type = type_current;
         self.clocks[index_current] = self.clock.wrapping_add(1);
         self.clocks[index_new] = self.clock.wrapping_add(1);
     }

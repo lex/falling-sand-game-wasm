@@ -310,7 +310,10 @@ impl Renderer {
 
                 float r = random(fract(vTextureCoord));
 
-                if (color.a == (5.0 / 255.0)) {
+                if (color.a == (6.0 / 255.0)) {
+                    // oil
+                    color = vec4(55.0/255.0, 58.0/255.0, 54.0/255.0, 1.0);
+                } else if (color.a == (5.0 / 255.0)) {
                     // fire
                     color = vec4(170.0/255.0, 16.0/255.0, 0.0/255.0, 1.0);
                 } else if (color.a == (4.0 / 255.0)) {
