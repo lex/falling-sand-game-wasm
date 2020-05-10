@@ -299,8 +299,16 @@ impl Renderer {
             uniform sampler2D uSampler;
             uniform float uTime;
 
+            float random(in vec2 v) {
+                return fract(sin(dot(v.xy,
+                    vec2(419.5548,66.784)))
+                    * 4611.778291);
+            }
+
             void main() {
                 vec4 color = texture2D(uSampler, vTextureCoord);
+
+                float r = random(fract(vTextureCoord));
 
                 if (color.a == (5.0 / 255.0)) {
                     // fire
@@ -320,9 +328,15 @@ impl Renderer {
                 } else if (color.a == 0.0) {
                     // empty
                     color = vec4(0.0, 0.0, 0.0, 1.0);
+                    gl_FragColor = color;
+                    return;
                 } else {
                     color = vec4(1.0, 0.0, 0.0, 1.0);
                 }
+
+
+                float f = smoothstep(0.4, 0.5, r);
+                color = vec4(mix(color.xyz, color.xyz*1.05, f), 1.0);
 
                 gl_FragColor = color;
             }

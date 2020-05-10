@@ -5,34 +5,34 @@
 
       <b-navbar-toggle target="particle-type-collapse">
         <template v-slot:default="{ expanded }">
-          <b-text v-if="expanded">
+          <b-button v-if="expanded">
             {{ particleTypeAsString(particleType) }}
-          </b-text>
-          <b-text v-else>
+          </b-button>
+          <b-button v-else>
             {{ particleTypeAsString(particleType) }}
-          </b-text>
+          </b-button>
         </template>
       </b-navbar-toggle>
 
       <b-navbar-toggle target="brush-size-collapse">
         <template v-slot:default="{ expanded }">
-          <b-text v-if="expanded">
+          <b-button v-if="expanded">
             {{ brushSizeAsString(brushSize) }}
-          </b-text>
-          <b-text v-else>
+          </b-button>
+          <b-button v-else>
             {{ brushSizeAsString(brushSize) }}
-          </b-text>
+          </b-button>
         </template>
       </b-navbar-toggle>
 
       <b-navbar-toggle target="debug-collapse">
         <template v-slot:default="{ expanded }">
-          <b-text v-if="expanded">
+          <b-button v-if="expanded">
             Debug
-          </b-text>
-          <b-text v-else>
+          </b-button>
+          <b-button v-else>
             Debug
-          </b-text>
+          </b-button>
         </template>
       </b-navbar-toggle>
 
@@ -134,7 +134,6 @@ export default class Game extends Vue {
     this.updateScaling();
 
     requestAnimationFrame(this.renderLoop);
-
   }
 
   beforeDestroy() {
