@@ -155,65 +155,22 @@ impl SandGame {
         let index_current = self.get_index(x, y);
 
         let index_down = self.get_index(x, y + 1);
-        let index_down_left = self.get_index(x - 1, y + 1);
-        let index_down_right = self.get_index(x + 1, y + 1);
         let index_left = self.get_index(x - 1, y);
         let index_right = self.get_index(x + 1, y);
-
         let index_up = self.get_index(x, y - 1);
-        let index_up_left = self.get_index(x - 1, y - 1);
-        let index_up_right = self.get_index(x + 1, y - 1);
 
-        let particle_down = &self.particles[index_down];
-        let particle_down_left = &self.particles[index_down_left];
-        let particle_down_right = &self.particles[index_down_right];
-        let particle_left = &self.particles[index_left];
-        let particle_right = &self.particles[index_right];
+        for index in [index_down, index_left, index_right, index_up].iter() {
+            let particle = &self.particles[*index];
+            if particle.p_type == ParticleType::Plant {
+                self.particles[*index].p_type = ParticleType::Fire;
+                self.clocks[*index] = self.clock.wrapping_add(1);
+            }
 
-        let particle_up = &self.particles[index_up];
-        let particle_up_left = &self.particles[index_up_left];
-        let particle_up_right = &self.particles[index_up_right];
+        }
 
-        let direction = match (
-            particle_down_left.p_type,
-            particle_down.p_type,
-            particle_down_right.p_type,
-            particle_left.p_type,
-            particle_right.p_type,
-            particle_up.p_type,
-            particle_up_left.p_type,
-            particle_up_right.p_type,
-        ) {
-            (ParticleType::Plant, _, _, _, _, _, _, _) => Direction::DownLeft,
-            (_, ParticleType::Plant, _, _, _, _, _, _) => Direction::Down,
-            (_, _, ParticleType::Plant, _, _, _, _, _) => Direction::DownRight,
-            (_, _, _, ParticleType::Plant, _, _, _, _) => Direction::Left,
-            (_, _, _, _, ParticleType::Plant, _, _, _) => Direction::Right,
-            (_, _, _, _, _, ParticleType::Plant, _, _) => Direction::Up,
-            (_, _, _, _, _, _, ParticleType::Plant, _) => Direction::UpLeft,
-            (_, _, _, _, _, _, _, ParticleType::Plant) => Direction::UpRight,
-            _ => Direction::None,
-        };
-
-        let index_new = match direction {
-            Direction::Down => index_down,
-            Direction::DownLeft => index_down_left,
-            Direction::DownRight => index_down_right,
-            Direction::Left => index_left,
-            Direction::Right => index_right,
-            Direction::Up => index_up,
-            Direction::UpLeft => index_up_left,
-            Direction::UpRight => index_up_right,
-            Direction::None => index_current,
-            _ => index_current,
-        };
-
-        self.particles[index_current].p_type = ParticleType::Empty;
-        self.clocks[index_current] = self.clock.wrapping_add(1);
-
-        if index_new != index_current {
-            self.particles[index_new].p_type = ParticleType::Fire;
-            self.clocks[index_new] = self.clock.wrapping_add(1);
+        if self.clocks[index_current].wrapping_sub(self.clock) > 10 {
+            self.particles[index_current].p_type = ParticleType::Empty;
+            self.clocks[index_current] = self.clock.wrapping_add(1);
         }
     }
 
@@ -260,6 +217,10 @@ impl SandGame {
             (_, _, _, _, _, _, _, ParticleType::Water) => Direction::UpRight,
             _ => Direction::None,
         };
+
+        if direction == Direction::None {
+            return;
+        }
 
         let index_new = match direction {
             Direction::Down => index_down,

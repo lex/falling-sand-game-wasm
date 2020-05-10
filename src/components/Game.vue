@@ -28,6 +28,9 @@
         <b-nav-item-dropdown text="Debug" right>
           <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
           <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
+          <b-dropdown-item v-on:click="updateScaling"
+            >Update scaling</b-dropdown-item
+          >
         </b-nav-item-dropdown>
       </b-navbar-nav>
     </b-navbar>
