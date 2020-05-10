@@ -180,7 +180,7 @@ export default class Game extends Vue {
     for (let y = -r; y <= r; ++y) {
       for (let x = -r; x <= r; ++x) {
         if (x * x + y * y <= r * r) {
-          if (ox + x < 2 || ox + x > this.gameWidth - 1 || oy + y < 1 || oy + y > this.gameHeight - 2) {
+          if (ox + x < 2 || ox + x > this.gameWidth - 2 || oy + y < 1 || oy + y > this.gameHeight - 2) {
             continue;
           }
 
