@@ -341,8 +341,17 @@ impl SandGame {
                     Direction::Right
                 }
             }
+            (_, _, _, ParticleType::Oil, ParticleType::Oil) => {
+                if r == 0 {
+                    Direction::Left
+                } else {
+                    Direction::Right
+                }
+            }
             (_, _, _, ParticleType::Empty, _) => Direction::Left,
+            (_, _, _, ParticleType::Oil, _) => Direction::Left,
             (_, _, _, _, ParticleType::Empty) => Direction::Right,
+            (_, _, _, _, ParticleType::Oil) => Direction::Right,
             (ParticleType::Empty, _, ParticleType::Empty, _, _) => {
                 if r == 0 {
                     Direction::DownLeft
@@ -350,8 +359,17 @@ impl SandGame {
                     Direction::DownRight
                 }
             }
+            (ParticleType::Oil, _, ParticleType::Oil, _, _) => {
+                if r == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
             (ParticleType::Empty, _, _, _, _) => Direction::DownLeft,
+            (ParticleType::Oil, _, _, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty, _, _) => Direction::DownRight,
+            (_, _, ParticleType::Oil, _, _) => Direction::DownRight,
             _ => Direction::None,
         };
 
@@ -397,6 +415,7 @@ impl SandGame {
         ) {
             (_, ParticleType::Empty, _) => Direction::Down,
             (_, ParticleType::Water, _) => Direction::Down,
+            (_, ParticleType::Oil, _) => Direction::Down,
             (ParticleType::Empty, _, ParticleType::Empty) => {
                 if r == 0 {
                     Direction::DownLeft
@@ -411,10 +430,19 @@ impl SandGame {
                     Direction::DownRight
                 }
             }
+            (ParticleType::Oil, _, ParticleType::Oil) => {
+                if r == 0 {
+                    Direction::DownLeft
+                } else {
+                    Direction::DownRight
+                }
+            }
             (ParticleType::Empty, _, _) => Direction::DownLeft,
             (ParticleType::Water, _, _) => Direction::DownLeft,
+            (ParticleType::Oil, _, _) => Direction::DownLeft,
             (_, _, ParticleType::Empty) => Direction::DownRight,
             (_, _, ParticleType::Water) => Direction::DownRight,
+            (_, _, ParticleType::Oil) => Direction::DownRight,
             _ => Direction::None,
         };
 
