@@ -13,6 +13,15 @@
             >{{ particleTypeAsString(pType) }}</b-dropdown-item
           >
         </b-nav-item-dropdown>
+        <b-nav-item-dropdown :text="brushSizeAsString(brushSize)">
+          <b-dropdown-item v-on:click="setBrushSize(1)">Tiny</b-dropdown-item>
+          <b-dropdown-item v-on:click="setBrushSize(3)">Small</b-dropdown-item>
+          <b-dropdown-item v-on:click="setBrushSize(5)">Medium</b-dropdown-item>
+          <b-dropdown-item v-on:click="setBrushSize(8)">Large</b-dropdown-item>
+          <b-dropdown-item v-on:click="setBrushSize(10)"
+            >Extra Large</b-dropdown-item
+          >
+        </b-nav-item-dropdown>
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto">
@@ -74,8 +83,9 @@ export default class Game extends Vue {
   private mouseX = 0;
   private mouseY = 0;
   private drawing = false;
-
   private touching = false;
+
+  private brushSize = 5;
 
   private particleType = ParticleType.Sand;
 
@@ -154,6 +164,7 @@ export default class Game extends Vue {
   get canvasWidth() {
     return this._canvasWidth * this.canvasScaleX;
   }
+
   get canvasHeight() {
     return this._canvasHeight * this.canvasScaleY;
   }
@@ -164,11 +175,11 @@ export default class Game extends Vue {
   }
 
   private draw(ox: number, oy: number) {
-    const r = 5;
+    const r = this.brushSize;
 
     for (let y = -r; y <= r; ++y) {
       for (let x = -r; x <= r; ++x) {
-        if (x * x + y * y <= r*r) {
+        if (x * x + y * y <= r * r) {
           if (ox + x < 2 || ox + x > this.gameWidth - 1 || oy + y < 1 || oy + y > this.gameHeight - 2) {
             continue;
           }
@@ -216,6 +227,27 @@ export default class Game extends Vue {
       for (let x = 1; x < this.gameWidth - 1; ++x) {
         this.sandGame.spawn(x, y, ParticleType.Empty);
       }
+    }
+  }
+
+  private setBrushSize(size: number) {
+    this.brushSize = size;
+  }
+
+  private brushSizeAsString(size: number) {
+    switch (size) {
+      case 1:
+        return "Tiny";
+      case 3:
+        return "Small";
+      case 5:
+        return "Medium";
+      case 8:
+        return "Large";
+      case 10:
+        return "Extra Large";
+        default:
+          return "undefined";
     }
   }
 }
