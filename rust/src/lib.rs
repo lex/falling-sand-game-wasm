@@ -144,6 +144,10 @@ impl SandGame {
     pub fn initialize_webgl(&mut self) {
         self.renderer.setup_webgl();
     }
+
+    pub fn update_viewport(&self, width: u32, height: u32) {
+        self.renderer.set_viewport(width, height);
+    }
 }
 
 impl SandGame {

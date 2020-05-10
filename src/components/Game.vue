@@ -3,43 +3,62 @@
     <b-navbar ref="navbar" toggleable="lg" type="dark" variant="dark">
       <b-navbar-brand href="#">Sand Game</b-navbar-brand>
 
-      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-      <b-collapse id="nav-collapse" is-nav>
-        <b-navbar-nav>
-          <b-nav-item-dropdown :text="particleTypeAsString(particleType)">
-            <b-dropdown-item
-              v-for="pType in particleTypes"
-              :key="pType"
-              :active="pType == particleType"
-              v-on:click="selectType(pType)"
-              >{{ particleTypeAsString(pType) }}</b-dropdown-item
-            >
-          </b-nav-item-dropdown>
-          <b-nav-item-dropdown :text="brushSizeAsString(brushSize)">
-            <b-dropdown-item v-on:click="setBrushSize(1)">Tiny</b-dropdown-item>
-            <b-dropdown-item v-on:click="setBrushSize(3)"
-              >Small</b-dropdown-item
-            >
-            <b-dropdown-item v-on:click="setBrushSize(5)"
-              >Medium</b-dropdown-item
-            >
-            <b-dropdown-item v-on:click="setBrushSize(8)"
-              >Large</b-dropdown-item
-            >
-            <b-dropdown-item v-on:click="setBrushSize(10)"
-              >Extra Large</b-dropdown-item
-            >
-          </b-nav-item-dropdown>
-        </b-navbar-nav>
+      <b-navbar-toggle target="particle-type-collapse">
+        <template v-slot:default="{ expanded }">
+          <b-text v-if="expanded">
+            {{ particleTypeAsString(particleType) }}
+          </b-text>
+          <b-text v-else>
+            {{ particleTypeAsString(particleType) }}
+          </b-text>
+        </template>
+      </b-navbar-toggle>
 
+      <b-navbar-toggle target="brush-size-collapse">
+        <b-text v-if="expanded">
+          {{ brushSizeAsString(brushSize) }}
+        </b-text>
+        <b-text v-else>
+          {{ brushSizeAsString(brushSize) }}
+        </b-text>
+      </b-navbar-toggle>
+
+      <b-navbar-toggle target="debug-collapse">
+        <b-text v-if="expanded">
+          Debug
+        </b-text>
+        <b-text v-else>
+          Debug
+        </b-text>
+      </b-navbar-toggle>
+
+      <b-collapse id="particle-type-collapse" is-nav>
         <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown text="Debug" right>
-            <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
-            <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
-            <b-dropdown-item v-on:click="updateScaling"
-              >Update scaling</b-dropdown-item
-            >
-          </b-nav-item-dropdown>
+          <b-nav-item
+            v-for="pType in particleTypes"
+            :key="pType"
+            :active="pType == particleType"
+            v-on:click="selectType(pType)"
+            >{{ particleTypeAsString(pType) }}</b-nav-item
+          >
+        </b-navbar-nav>
+      </b-collapse>
+
+      <b-collapse id="brush-size-collapse" is-nav>
+        <b-navbar-nav class="ml-auto">
+          <b-nav-item v-on:click="setBrushSize(1)">Tiny</b-nav-item>
+          <b-nav-item v-on:click="setBrushSize(3)">Small</b-nav-item>
+          <b-nav-item v-on:click="setBrushSize(5)">Medium</b-nav-item>
+          <b-nav-item v-on:click="setBrushSize(8)">Large</b-nav-item>
+          <b-nav-item v-on:click="setBrushSize(10)">Extra Large</b-nav-item>
+        </b-navbar-nav>
+      </b-collapse>
+
+      <b-collapse id="debug-collapse" is-nav>
+        <b-navbar-nav class="ml-auto">
+          <b-nav-item v-on:click="clear">Clear</b-nav-item>
+          <b-nav-item v-on:click="debugFill">Fill</b-nav-item>
+          <b-nav-item v-on:click="updateScaling">Update scaling</b-nav-item>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -104,12 +123,21 @@ export default class Game extends Vue {
   async mounted() {
     this.canvas = this.$refs.canvas as HTMLCanvasElement;
     this.setupCanvas();
-    this.updateScaling();
+    window.addEventListener("resize", this.onResize);
 
     await this.loadWasm();
     this.setupGame();
+    this.updateScaling();
 
     requestAnimationFrame(this.renderLoop);
+  }
+
+  destroyed() {
+    window.removeEventListener("resize", this.onResize);
+  }
+
+  private onResize() {
+    this.updateScaling();
   }
 
   private setupCanvas() {
@@ -123,6 +151,7 @@ export default class Game extends Vue {
     const scaleY = (window.innerHeight - canvasContainer.offsetTop) / this.gameHeight;
     this.canvasScaleX = scaleX;
     this.canvasScaleY = scaleY;
+    this.sandGame.update_viewport(this.canvasWidth, this.canvasHeight)
   }
 
   private async loadWasm() {

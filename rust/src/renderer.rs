@@ -138,6 +138,11 @@ impl Renderer {
             0,
         );
     }
+
+    pub fn set_viewport(&self, width: u32, height: u32) {
+        let context = self.context.as_ref().unwrap();
+        context.viewport(0, 0, width as i32, height as i32);
+    }
 }
 
 impl Renderer {
