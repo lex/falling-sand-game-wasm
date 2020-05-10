@@ -15,21 +15,25 @@
       </b-navbar-toggle>
 
       <b-navbar-toggle target="brush-size-collapse">
-        <b-text v-if="expanded">
-          {{ brushSizeAsString(brushSize) }}
-        </b-text>
-        <b-text v-else>
-          {{ brushSizeAsString(brushSize) }}
-        </b-text>
+        <template v-slot:default="{ expanded }">
+          <b-text v-if="expanded">
+            {{ brushSizeAsString(brushSize) }}
+          </b-text>
+          <b-text v-else>
+            {{ brushSizeAsString(brushSize) }}
+          </b-text>
+        </template>
       </b-navbar-toggle>
 
       <b-navbar-toggle target="debug-collapse">
-        <b-text v-if="expanded">
-          Debug
-        </b-text>
-        <b-text v-else>
-          Debug
-        </b-text>
+        <template v-slot:default="{ expanded }">
+          <b-text v-if="expanded">
+            Debug
+          </b-text>
+          <b-text v-else>
+            Debug
+          </b-text>
+        </template>
       </b-navbar-toggle>
 
       <b-collapse id="particle-type-collapse" is-nav>
@@ -130,9 +134,14 @@ export default class Game extends Vue {
     this.updateScaling();
 
     requestAnimationFrame(this.renderLoop);
+
   }
 
-  destroyed() {
+  beforeDestroy() {
+    this._canvasWidth = 1;
+    this._canvasHeight = 1;
+    this.canvasScaleX = 1;
+    this.canvasScaleY = 1;
     window.removeEventListener("resize", this.onResize);
   }
 
