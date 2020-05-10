@@ -17,6 +17,8 @@
 
 body {
   background-color: #1c1c1c;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .container-fluid {
