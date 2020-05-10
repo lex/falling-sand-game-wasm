@@ -3,27 +3,24 @@
     <b-navbar ref="navbar" toggleable="lg" type="dark" variant="dark">
       <b-navbar-brand href="#">Sand Game</b-navbar-brand>
 
-      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-
-      <b-collapse id="nav-collapse" is-nav>
-        <b-navbar-nav>
-          <b-nav-item
+      <b-navbar-nav>
+        <b-nav-item-dropdown :text="particleTypeAsString(particleType)">
+          <b-dropdown-item
             v-for="pType in particleTypes"
             :key="pType"
             :active="pType == particleType"
             v-on:click="selectType(pType)"
+            >{{ particleTypeAsString(pType) }}</b-dropdown-item
           >
-            {{ particleTypeAsString(pType) }}
-          </b-nav-item>
-        </b-navbar-nav>
+        </b-nav-item-dropdown>
+      </b-navbar-nav>
 
-        <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown text="Debug" right>
-            <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
-            <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
-          </b-nav-item-dropdown>
-        </b-navbar-nav>
-      </b-collapse>
+      <b-navbar-nav class="ml-auto">
+        <b-nav-item-dropdown text="Debug" right>
+          <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
+          <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
+        </b-nav-item-dropdown>
+      </b-navbar-nav>
     </b-navbar>
     <div id="canvas-container" ref="canvascontainer">
       <canvas
@@ -68,6 +65,8 @@ export default class Game extends Vue {
   private windowWidth = window.innerWidth;
   private windowHeight = window.innerHeight;
 
+  private _canvasWidth = 1;
+  private _canvasHeight = 1;
   private canvasScaleX = 1;
   private canvasScaleY = 1;
   private canvas?: HTMLCanvasElement = undefined;
@@ -82,12 +81,18 @@ export default class Game extends Vue {
 
   async mounted() {
     this.canvas = this.$refs.canvas as HTMLCanvasElement;
+    this.setupCanvas();
     this.updateScaling();
 
     await this.loadWasm();
     this.setupGame();
 
     requestAnimationFrame(this.renderLoop);
+  }
+
+  private setupCanvas() {
+    this._canvasWidth = this.gameWidth;
+    this._canvasHeight = this.gameHeight;
   }
 
   private updateScaling() {
@@ -147,10 +152,10 @@ export default class Game extends Vue {
   }
 
   get canvasWidth() {
-    return this.gameWidth * this.canvasScaleX;
+    return this._canvasWidth * this.canvasScaleX;
   }
   get canvasHeight() {
-    return this.gameHeight * this.canvasScaleY;
+    return this._canvasHeight * this.canvasScaleY;
   }
 
   private setupGame() {
@@ -158,21 +163,19 @@ export default class Game extends Vue {
     this.sandGame.initialize_webgl();
   }
 
-  private draw(x: number, y: number) {
-    const r = 10;
+  private draw(ox: number, oy: number) {
+    const r = 5;
 
-    for (let i = 0; i < 360; i += 10) {
-        const angle = i;
-        const x1 = Math.floor(r * Math.cos(angle * Math.PI / 180));
-        const y1 = Math.floor(r * Math.sin(angle * Math.PI / 180));
-        const spawnX = x + x1;
-        const spawnY = y + y1;
+    for (let y = -r; y <= r; ++y) {
+      for (let x = -r; x <= r; ++x) {
+        if (x * x + y * y <= r*r) {
+          if (ox + x < 2 || ox + x > this.gameWidth - 1 || oy + y < 1 || oy + y > this.gameHeight - 2) {
+            continue;
+          }
 
-        if (spawnX < 2 || spawnX > this.gameWidth - 2 || spawnY < 2 || spawnY > this.gameHeight - 2) {
-          continue;
+          this.sandGame.spawn(ox+x, oy+y, this.particleType);
         }
-
-        this.sandGame.spawn(x+x1, y+y1, this.particleType);
+      }
     }
   }
 
