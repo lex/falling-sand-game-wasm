@@ -3,36 +3,45 @@
     <b-navbar ref="navbar" toggleable="lg" type="dark" variant="dark">
       <b-navbar-brand href="#">Sand Game</b-navbar-brand>
 
-      <b-navbar-nav>
-        <b-nav-item-dropdown :text="particleTypeAsString(particleType)">
-          <b-dropdown-item
-            v-for="pType in particleTypes"
-            :key="pType"
-            :active="pType == particleType"
-            v-on:click="selectType(pType)"
-            >{{ particleTypeAsString(pType) }}</b-dropdown-item
-          >
-        </b-nav-item-dropdown>
-        <b-nav-item-dropdown :text="brushSizeAsString(brushSize)">
-          <b-dropdown-item v-on:click="setBrushSize(1)">Tiny</b-dropdown-item>
-          <b-dropdown-item v-on:click="setBrushSize(3)">Small</b-dropdown-item>
-          <b-dropdown-item v-on:click="setBrushSize(5)">Medium</b-dropdown-item>
-          <b-dropdown-item v-on:click="setBrushSize(8)">Large</b-dropdown-item>
-          <b-dropdown-item v-on:click="setBrushSize(10)"
-            >Extra Large</b-dropdown-item
-          >
-        </b-nav-item-dropdown>
-      </b-navbar-nav>
+      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+      <b-collapse id="nav-collapse" is-nav>
+        <b-navbar-nav>
+          <b-nav-item-dropdown :text="particleTypeAsString(particleType)">
+            <b-dropdown-item
+              v-for="pType in particleTypes"
+              :key="pType"
+              :active="pType == particleType"
+              v-on:click="selectType(pType)"
+              >{{ particleTypeAsString(pType) }}</b-dropdown-item
+            >
+          </b-nav-item-dropdown>
+          <b-nav-item-dropdown :text="brushSizeAsString(brushSize)">
+            <b-dropdown-item v-on:click="setBrushSize(1)">Tiny</b-dropdown-item>
+            <b-dropdown-item v-on:click="setBrushSize(3)"
+              >Small</b-dropdown-item
+            >
+            <b-dropdown-item v-on:click="setBrushSize(5)"
+              >Medium</b-dropdown-item
+            >
+            <b-dropdown-item v-on:click="setBrushSize(8)"
+              >Large</b-dropdown-item
+            >
+            <b-dropdown-item v-on:click="setBrushSize(10)"
+              >Extra Large</b-dropdown-item
+            >
+          </b-nav-item-dropdown>
+        </b-navbar-nav>
 
-      <b-navbar-nav class="ml-auto">
-        <b-nav-item-dropdown text="Debug" right>
-          <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
-          <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
-          <b-dropdown-item v-on:click="updateScaling"
-            >Update scaling</b-dropdown-item
-          >
-        </b-nav-item-dropdown>
-      </b-navbar-nav>
+        <b-navbar-nav class="ml-auto">
+          <b-nav-item-dropdown text="Debug" right>
+            <b-dropdown-item v-on:click="clear">Clear</b-dropdown-item>
+            <b-dropdown-item v-on:click="debugFill">Fill</b-dropdown-item>
+            <b-dropdown-item v-on:click="updateScaling"
+              >Update scaling</b-dropdown-item
+            >
+          </b-nav-item-dropdown>
+        </b-navbar-nav>
+      </b-collapse>
     </b-navbar>
     <div id="canvas-container" ref="canvascontainer">
       <canvas
